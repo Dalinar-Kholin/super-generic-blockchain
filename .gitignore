@@ -29,7 +29,7 @@ project.fragment.lock.json
 artifacts/
 
 blockProject.sln
-.idea
+.idea/
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
