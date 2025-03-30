@@ -35,7 +35,8 @@ internal class Program
                 string destPort = port.ToString();
                 Console.WriteLine(ip.ToString());
 
-                sender.AddIP(new IPEndPoint(IPAddress.Parse(ip.ToString()),int.Parse(destPort)));     
+                sender.AddIP(new IPEndPoint(IPAddress.Parse(ip.ToString()),int.Parse(destPort)));
+                
             }
         });
 
@@ -46,7 +47,16 @@ internal class Program
             IBlockchain block = NonBlockChain.GetInstance();
             var res = sender.SendData(block);
             res.Wait();
-            Console.WriteLine(res.Result == null ? $"pojawił się błąd{res.Result?.error}" : "sucess");
+            Console.WriteLine(res.Result != null ? $"pojawił się błąd {res.Result?.error}" : "sucess");
+            
+            var result = new { success = true, message = res.Result != null ? $"pojawił się błąd {res.Result?.error}" : "sucess" };
+
+            // Ustawienie typu odpowiedzi
+            context.Response.ContentType = "application/json";
+
+            // Zapisanie (wysłanie) odpowiedzi jako JSON
+            var task = context.Response.WriteAsJsonAsync(result);
+            task.Wait();
         });
         
         api.MapGet("/getNode", (HttpContext httpContext) => { return "essa"; });

@@ -34,6 +34,7 @@ public class Listener
                 while (true)
                 { // jakoś tutaj powinna odbyć się obsługa komunikacji z klientem, odwołujemy się do Mastera
                     var message = await reader.ReadLineAsync();
+                    
                     if (string.IsNullOrEmpty(message))
                     {
                         Console.WriteLine("połączenie zakończone");
