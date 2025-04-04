@@ -12,7 +12,7 @@ namespace blockProject.nodeCommunicatio;
 // klasa do wysyłania danych do innych węzłów
 public class DataSender
 {
-    private List<IPEndPoint> IPs = new List<IPEndPoint>();
+    private List<IPEndPoint> IPs = [];
     
 
     public void AddIP(IPEndPoint ip)

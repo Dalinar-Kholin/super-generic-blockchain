@@ -18,49 +18,20 @@ internal class Program
         var port = int.Parse(args[0]);
         new Thread(new Listener(new SimpleTextCm(),port ).Start).Start(); // włączamy wątek odpowiedzialny za nasłuchiwanie
 
-        var builder = WebApplication.CreateBuilder(args);
+        var builder = WebApplication.CreateBuilder();
 
-        // Add services to the container.
-        builder.Services.AddAuthorization();
-
-        builder.Services.AddOpenApi();
-        var sender = new DataSender();
         var app = builder.Build();
         var api = app.MapGroup("/api");
+
+        var httpMaster = new HttpMaster(new DataSender());
         
-        api.MapGet("/addNewNode", (HttpContext context) => // zmić na POST i dodać czytanie z BODY
-        {
-            if (context.Request.Query.TryGetValue("port", out var port) &&  context.Request.Query.TryGetValue("ip", out var ip))
-            {
-                string destPort = port.ToString();
-                Console.WriteLine(ip.ToString());
-
-                sender.AddIP(new IPEndPoint(IPAddress.Parse(ip.ToString()),int.Parse(destPort)));
-                
-            }
-        });
-
+        api.MapGet("/addNewNode", httpMaster.AddNewNode);
         
         //sprawdzenie czy komunikacja działa
-        api.MapGet("/sendMessage", (HttpContext context) =>
-        {
-            IBlockchain block = NonBlockChain.GetInstance();
-            var res = sender.SendData(block);
-            res.Wait();
-            Console.WriteLine(res.Result != null ? $"pojawił się błąd {res.Result?.error}" : "sucess");
-            
-            var result = new { success = true, message = res.Result != null ? $"pojawił się błąd {res.Result?.error}" : "sucess" };
-
-            // Ustawienie typu odpowiedzi
-            context.Response.ContentType = "application/json";
-
-            // Zapisanie (wysłanie) odpowiedzi jako JSON
-            var task = context.Response.WriteAsJsonAsync(result);
-            task.Wait();
-        });
+        api.MapGet("/sendMessage", httpMaster.SendMessage);
         
-        api.MapGet("/getNode", (HttpContext httpContext) => { return "essa"; });
-       
+        api.MapGet("/getNode", (HttpContext httpContext) => "essa");
+        
         Console.WriteLine("starting server\n");
         app.Run($"http://127.0.0.1:{port+1}/");
     }
