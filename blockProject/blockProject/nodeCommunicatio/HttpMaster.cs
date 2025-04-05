@@ -1,38 +1,74 @@
 using System.Net;
 using blockProject.blockchain;
 using Microsoft.AspNetCore.Http;
+using blockProject.randomSrc;
+using System.Threading.Tasks;
 
-namespace blockProject.nodeCommunicatio;
-
-public class HttpMaster(DataSender sender)
+namespace blockProject.nodeCommunicatio
 {
-    public void AddNewNode(HttpContext context)
+    public class HttpMaster
     {
-        if (context.Request.Query.TryGetValue("port", out var port) &&  context.Request.Query.TryGetValue("ip", out var ip))
-        {
-            string destPort = port.ToString();
-            Console.WriteLine(ip.ToString());
+        private readonly DataSender sender;
 
-            sender.AddIP(new IPEndPoint(IPAddress.Parse(ip.ToString()),int.Parse(destPort)));
-                
+        public HttpMaster(DataSender sender)
+        {
+            this.sender = sender;
+        }
+
+        public async Task AddNewNode(HttpContext context)
+        {
+            if (context.Request.Query.TryGetValue("port", out var port) &&
+                context.Request.Query.TryGetValue("ip", out var ip))
+            {
+                string destPort = port.ToString();
+                Console.WriteLine(ip.ToString());
+
+                sender.AddIP(new IPEndPoint(IPAddress.Parse(ip.ToString()), int.Parse(destPort)));
+                Console.WriteLine("dodano nowy węzeł");
+
+                Error? errorResult = await sender.ReceiveBlockchain("GET_BLOCKCHAIN");
+                if (errorResult != null)
+                {
+                    Console.WriteLine($"Błąd: {errorResult.Message}");
+                    await context.Response.WriteAsJsonAsync(new
+                    {
+                        success = false,
+                        error = errorResult.Message
+                    });
+                    return;
+                }
+
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    success = true,
+                    message = "Node added and blockchain requested"
+                });
+            }
+            else
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    success = false,
+                    error = "Missing port or ip parameters"
+                });
+            }
+        }
+
+        public async Task SendMessage(HttpContext context)
+        {
+            IBlockchain block = NonBlockChain.GetInstance();
+            Error? res = await sender.SendData(block);
+            Console.WriteLine(res != null ? $"pojawił się błąd {res.Message}" : "success");
+
+            var result = new
+            {
+                success = res == null,
+                message = res != null ? $"pojawił się błąd {res.Message}" : "success"
+            };
+
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(result);
         }
     }
-
-    public void SendMessage(HttpContext context)
-    {
-        IBlockchain block = NonBlockChain.GetInstance();
-        var res = sender.SendData(block);
-        res.Wait();
-        Console.WriteLine(res.Result != null ? $"pojawił się błąd {res.Result?.error}" : "sucess");
-            
-        var result = new { success = true, message = res.Result != null ? $"pojawił się błąd {res.Result?.error}" : "sucess" };
-
-        // Ustawienie typu odpowiedzi
-        context.Response.ContentType = "application/json";
-
-        // Zapisanie (wysłanie) odpowiedzi jako JSON
-        var task = context.Response.WriteAsJsonAsync(result);
-        task.Wait();
-    }
-    
 }
