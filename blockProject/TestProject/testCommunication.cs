@@ -53,10 +53,12 @@ public class testCommunication
             try
             {
                 HttpResponseMessage response = await client.GetAsync($"http://127.0.0.1:{node1Port + 1}/api/addNewNode?port={node2Port}&ip=127.0.0.1");
-                Console.WriteLine((int)response.StatusCode);
+
+                Assert.Equal(200, (int)response.StatusCode);
 
                 response = await client.GetAsync($"http://127.0.0.1:{node1Port + 1}/api/sendMessage");
-                Console.WriteLine((int)response.StatusCode);
+
+                Assert.Equal(200, (int)response.StatusCode);
 
             }
             catch (Exception e)

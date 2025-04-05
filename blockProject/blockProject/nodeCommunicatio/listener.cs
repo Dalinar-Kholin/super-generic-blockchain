@@ -49,6 +49,10 @@ public class Listener
                         await stream.WriteAsync(responseBytes);
                         Console.WriteLine("Wysłano blockchain");
                     }
+                    else
+                    {
+                        await stream.WriteAsync(Encoding.UTF8.GetBytes("nice data"), 0, "nice data".Length);
+                    }
                 }
             });
         }
