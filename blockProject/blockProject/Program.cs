@@ -1,10 +1,8 @@
-﻿using blockProject.nodeCommunicatio;
+using blockProject.nodeCommunicatio;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 
 namespace blockProject;
-
-
 
 
 internal class Program

@@ -1,24 +1,23 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
+using blockProject.nodeCommunicatio.communicationFrames;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace blockProject.nodeCommunicatio;
-
-
-
-
 
 
 public class Listener
 {
     public ICommunicationMaster Master;
-    private int _port; 
+    private int _port;
+
     public Listener(ICommunicationMaster master, int port)
     {
         _port = port;
         Master = master;
     }
-
     
     public async void Start()
     {
@@ -30,21 +29,31 @@ public class Listener
             _ = Task.Run(async () =>
             {
                 await using var stream = client.GetStream();
-                using var reader = new StreamReader(stream);
-                await using var writer = new StreamWriter(stream);
-                writer.AutoFlush = true;
-                while (true)
-                { // jakoś tutaj powinna odbyć się obsługa komunikacji z klientem, odwołujemy się do Mastera
-                    var message = await reader.ReadLineAsync();
-                    
-                    if (string.IsNullOrEmpty(message))
-                    {
-                        Console.WriteLine("połączenie zakończone");
-                        break;
-                    };
-                    Console.WriteLine($"Odebrano: {message}");
 
-                    await writer.WriteLineAsync("nice data");
+                while (true) { // jakoś tutaj powinna odbyć się obsługa komunikacji z klientem, odwołujemy się do Mastera
+                    byte[] buffer = new byte[1_024];
+                    int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                    string body = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    Frame? receivedJson = JsonConvert.DeserializeObject<Frame>(body);
+                    
+                    if (receivedJson == null) { Console.WriteLine("połączenie zakończone\n"); break; }
+                    string data;
+                    byte[] responseBytes;
+                    switch (receivedJson.Request) { // zmienić to potem na communication mastera
+                        case Requests.GET_BLOCKCHAIN:
+                            var res = new Frame(Requests.GET_BLOCKCHAIN, JToken.FromObject(Master.GetBlockchain()));
+                            data = JsonConvert.SerializeObject(res);
+                            responseBytes = Encoding.UTF8.GetBytes(data);
+                            await stream.WriteAsync(responseBytes);
+                            Console.WriteLine($"Wysłano blockchain {data}");
+                            break;
+                        case Requests.CONNECTION_PING:
+                            var result = new Frame(Requests.CONNECTION_PING, JToken.FromObject(""));
+                            data = JsonConvert.SerializeObject(result);
+                            responseBytes = Encoding.UTF8.GetBytes(data);
+                            await stream.WriteAsync(responseBytes);
+                            break;
+                    }
                 }
             });
         }

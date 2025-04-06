@@ -1,7 +1,12 @@
-namespace blockProject.randomSrc;
-
-// domyślny typ hasnlowania błędami
-public struct Error(string message)
+namespace blockProject.randomSrc
 {
-    public readonly string error = message;
-};
+    public class Error
+    {
+        public string Message { get; }  // Używamy Message zamiast error
+
+        public Error(string message)
+        {
+            Message = message;
+        }
+    }
+}
