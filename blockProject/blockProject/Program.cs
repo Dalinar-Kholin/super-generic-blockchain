@@ -1,9 +1,6 @@
-﻿using System.Net;
-using blockProject.blockchain;
-using blockProject.nodeCommunicatio;
+﻿using blockProject.nodeCommunicatio;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace blockProject;
 

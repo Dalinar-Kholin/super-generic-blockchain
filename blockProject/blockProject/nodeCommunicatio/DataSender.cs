@@ -13,8 +13,12 @@ namespace blockProject.nodeCommunicatio;
 public class DataSender
 {
     private List<IPEndPoint> IPs = [];
-    
 
+    public List<string> GetIps()
+    {
+        return IPs.Select(ip => ip.ToString()).ToList();
+    }
+    
     public void AddIP(IPEndPoint ip)
     {
         IPs.Add(ip);

@@ -12,10 +12,15 @@ public class HttpMaster(DataSender sender)
         {
             string destPort = port.ToString();
             Console.WriteLine(ip.ToString());
-
             sender.AddIP(new IPEndPoint(IPAddress.Parse(ip.ToString()),int.Parse(destPort)));
-                
         }
+    }
+
+
+    public async Task GetFriendIp(HttpContext context)
+    {
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new {result = sender.GetIps()});
     }
 
     public void SendMessage(HttpContext context)
@@ -23,9 +28,9 @@ public class HttpMaster(DataSender sender)
         IBlockchain block = NonBlockChain.GetInstance();
         var res = sender.SendData(block);
         res.Wait();
-        Console.WriteLine(res.Result != null ? $"pojawił się błąd {res.Result?.error}" : "sucess");
+        Console.WriteLine(res.Result != null ? $"pojawił się błąd {res.Result?.error}" : "success");
             
-        var result = new { success = true, message = res.Result != null ? $"pojawił się błąd {res.Result?.error}" : "sucess" };
+        var result = new { success = true, message = res.Result != null ? $"pojawił się błąd {res.Result?.error}" : "success" };
 
         // Ustawienie typu odpowiedzi
         context.Response.ContentType = "application/json";

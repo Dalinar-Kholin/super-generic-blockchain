@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Sockets;
 
@@ -18,6 +19,7 @@ public class Listener
         Master = master;
     }
 
+    
     public async void Start()
     {
         var lis = new TcpListener(IPAddress.Any, _port);
