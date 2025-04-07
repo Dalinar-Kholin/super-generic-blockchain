@@ -63,7 +63,7 @@ namespace blockProject.nodeCommunicatio
         
         public async Task SendMessage(HttpContext context)
         {
-            IBlockchain block = NonBlockChain.GetInstance();
+            IBlockchain block = Blockchain.GetInstance();
             Error? res = await sender.SendData(block);
             Console.WriteLine(res != null ? $"pojawił się błąd {res.Message}" : "success");
 
