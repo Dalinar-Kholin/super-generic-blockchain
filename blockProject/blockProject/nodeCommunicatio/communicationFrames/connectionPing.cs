@@ -1,3 +1,3 @@
 namespace blockProject.nodeCommunicatio.communicationFrames;
 
-public record connectionPing();
+public record connectionPing;

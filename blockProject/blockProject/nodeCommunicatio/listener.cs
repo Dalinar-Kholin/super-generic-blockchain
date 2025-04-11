@@ -7,18 +7,17 @@ using Newtonsoft.Json.Linq;
 
 namespace blockProject.nodeCommunicatio;
 
-
 public class Listener
 {
+    private readonly int _port;
     public ICommunicationMaster Master;
-    private int _port;
 
     public Listener(ICommunicationMaster master, int port)
     {
         _port = port;
         Master = master;
     }
-    
+
     public async void Start()
     {
         var lis = new TcpListener(IPAddress.Any, _port);
@@ -30,22 +29,31 @@ public class Listener
             {
                 await using var stream = client.GetStream();
 
-                while (true) { // jakoś tutaj powinna odbyć się obsługa komunikacji z klientem, odwołujemy się do Mastera
-                    byte[] buffer = new byte[1_024];
-                    int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-                    string body = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    Frame? receivedJson = JsonConvert.DeserializeObject<Frame>(body);
-                    
-                    if (receivedJson == null) { Console.WriteLine("połączenie zakończone\n"); break; }
+                while (true)
+                {
+                    // jakoś tutaj powinna odbyć się obsługa komunikacji z klientem, odwołujemy się do Mastera
+                    var buffer = new byte[1_024];
+                    var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                    var body = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    var receivedJson = JsonConvert.DeserializeObject<Frame>(body);
+
+                    if (receivedJson == null)
+                    {
+                        Console.WriteLine("połączenie zakończone\n");
+                        break;
+                    }
+
                     string data;
                     byte[] responseBytes;
-                    switch (receivedJson.Request) { // zmienić to potem na communication mastera
+                    switch (receivedJson.Request)
+                    {
+                        // zmienić to potem na communication mastera
                         case Requests.GET_BLOCKCHAIN:
                             var res = new Frame(Requests.GET_BLOCKCHAIN, JToken.FromObject(Master.GetBlockchain()));
                             data = JsonConvert.SerializeObject(res);
                             responseBytes = Encoding.UTF8.GetBytes(data);
                             await stream.WriteAsync(responseBytes);
-                            Console.WriteLine($"Wysłano blockchain {data}");
+                            // Console.WriteLine($"Wysłano blockchain {data}");
                             break;
                         case Requests.CONNECTION_PING:
                             var result = new Frame(Requests.CONNECTION_PING, JToken.FromObject(""));

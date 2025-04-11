@@ -1,13 +1,14 @@
 namespace blockProject.blockchain;
 
-
 // jakie metody powinnien udostępniać nasz blockchain
-public interface IBlockchain
+public interface IBlockchain<T>
 {
-	string GetBlockchain(); // zwraca jako json
-	void AddBlock(Block block);
-	void LoadData(); // wczytuje z pliku
-	void BroadcastBlock(Block block); // rozsyłanie bloku 
+    string GetParsedBlockchain(); // zwraca jako json
+
+    void CreateBlock(T block); // gdy MY tworzymy blok
+    void AddBlock(T block); // gdy dostajemy blok
+    void LoadData(); // wczytuje z pliku
+
+    void
+        BroadcastBlock(T block); // rozsyłanie bloku -- to nie jest zadanie blockchainu, wolałbym uniknąć tworzeniu God objectu 
 }
-
-

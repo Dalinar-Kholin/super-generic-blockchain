@@ -1,11 +1,12 @@
 using System.Text.Json;
+using blockProject.blockchain;
 
 namespace blockProject.nodeCommunicatio;
 
 public class SimpleTextCm : ICommunicationMaster
 {
     private const string BlockchainFile = "../../../data.json";
-    private List<string> _nodes = new List<string>();
+    private List<string> _nodes = new();
 
 
     public void AddToBlockchain(string data)
@@ -18,11 +19,9 @@ public class SimpleTextCm : ICommunicationMaster
         throw new NotImplementedException("Method not implemented yet.");
     }
 
-    public string GetBlockchain()
+    public List<BlockType> GetBlockchain()
     {
-        Console.WriteLine("Getting blockchain data...");
-        var blockchain = GetBlockchainList();
-        return JsonSerializer.Serialize(blockchain);
+        return Blockchain.GetInstance().GetBlockchain();
     }
 
     private List<string> GetBlockchainList()

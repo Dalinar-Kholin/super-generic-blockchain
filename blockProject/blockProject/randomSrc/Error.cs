@@ -1,12 +1,11 @@
-namespace blockProject.randomSrc
-{
-    public class Error
-    {
-        public string Message { get; }  // Używamy Message zamiast error
+namespace blockProject.randomSrc;
 
-        public Error(string message)
-        {
-            Message = message;
-        }
+public class Error
+{
+    public Error(string message)
+    {
+        Message = message;
     }
+
+    public string Message { get; } // Używamy Message zamiast error
 }

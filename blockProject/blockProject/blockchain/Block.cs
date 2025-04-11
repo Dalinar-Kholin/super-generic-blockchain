@@ -1,30 +1,40 @@
-﻿namespace blockProject.blockchain
+﻿using System.Text;
+using Newtonsoft.Json;
+
+namespace blockProject.blockchain;
+
+public class Block
 {
-	public class Block
-	{
-		public int Index { get; set; }
-		public DateTime Timestamp { get; set; }
-		public List<Record> Records { get; set; } = new();
-		public string PreviousHash { get; set; } = "";
-		public string Hash { get; set; } = "";
+    
+    // dla parsowania JSON
+    [JsonConstructor]
+    public Block(){}
+    
+    public Block( /*int index,*/ string previousHash)
+    {
+        //Index = index;
+        PreviousHash = previousHash;
+        // Timestamp = DateTime.UtcNow;
+    }
+    // public int Index { get; set; } // czy indexem bloku nie jest jego hash?
+    // public DateTime Timestamp { get; set; } // po co timestamp?
 
-		public Block(int index, string previousHash)
-		{
-			Index = index;
-			PreviousHash = previousHash;
-			Timestamp = DateTime.UtcNow;
-		}
+    public List<Record> Records { get; set; } = new();
+    public string PreviousHash { get; set; } = "";
+    public string Hash { get; set; } = ""; // ostatnie 3 liczby hasha w zapisie 0x powinny być 0
+    public string DataHash { get; set; } = ""; // hash danych przechowywanych w bloku
+    public int Nonce { get; set; } = 0; // liczba która pozwala na spełnienie warunku poprawności hasha
 
-		public void AddRecord(Record record)
-		{
-			Records.Add(record);
-		}
+    public void AddRecord(Record record)
+    {
+        Records.Add(record);
+    }
 
-		public void ComputeHash()
-		{
-			// todo: ogarnąć logikę tej funkcji (nonce itp.)
-			var raw = $"{Index}-{PreviousHash}-{Timestamp}-{string.Join(",", Records.Select(r => r.ToString()))}";
-			Hash = Convert.ToBase64String(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(raw)));
-		}
-	}
+    public override string ToString()
+    {
+        var sb = new StringBuilder();
+        foreach (var v in Records) sb.Append(v + "\n");
+
+        return $"{Hash} {Nonce} {DataHash}\n{sb}";
+    }
 }
