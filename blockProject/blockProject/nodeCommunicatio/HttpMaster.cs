@@ -13,6 +13,34 @@ public class HttpMaster
         this.sender = sender;
     }
 
+    // wysłanie bloku do sąsiadów
+    public async Task SendBlock(HttpContext context)
+    {
+        //testowe dane
+        Record record = new Record("test", "test");
+        BlockType block = new BlockType("0x0");
+        block.AddRecord(record);
+
+        Console.WriteLine($"Wysłano blok: {block}");
+        var errorResult = await sender.SendBlock(block);
+
+        if (errorResult != null)
+        {
+            Console.WriteLine($"Błąd: {errorResult.Message}");
+            await context.Response.WriteAsJsonAsync(new
+            {
+                success = false,
+                error = errorResult.Message
+            });
+            return;
+        }
+        await context.Response.WriteAsJsonAsync(new
+        {
+            success = true,
+            message = "Block sent successfully"
+        });
+    }
+
     public async Task AddNewNode(HttpContext context)
     {
         if (context.Request.Query.TryGetValue("port", out var port) &&

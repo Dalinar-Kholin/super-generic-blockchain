@@ -25,10 +25,50 @@ public class DataSender
         IPs.Add(ip);
     }
 
+    // do lekkiej zmiany
+    // wyslanie bloku do sasiadów
+    public async Task<Error?> SendBlock(BlockType block)
+    {
+        foreach (var ip in IPs) // przy metodzie plotki przesyłamy do losowych sąsiadów w liczbie x
+        {
+            var requestFrame =
+                new Frame(Requests.ADD_BLOCK, JToken.FromObject(block));
+
+            Console.WriteLine($"Próba wysłania danych: {requestFrame} do {ip.Address}");
+            using TcpClient client = new();
+            await client.ConnectAsync(ip);
+            await using var stream = client.GetStream();
+            try
+            {
+                string data = JsonConvert.SerializeObject(requestFrame);
+                var bytes = Encoding.UTF8.GetBytes(data);
+                await stream.WriteAsync(bytes);
+
+                var buffer = new byte[1_024];
+                var readed = await stream.ReadAsync(buffer);
+                var result = Encoding.UTF8.GetString(buffer, 0, readed);
+                var json = JsonConvert.DeserializeObject<Frame>(result);
+
+                if (json is { Request: Requests.ADD_BLOCK })
+                {
+                    return null;
+                }
+
+                return new Error("Invalid response: " + result);
+            }
+            catch (Exception e)
+            {
+                return new Error($"Nie udało się wysłać danych {e}");
+            }
+        }
+        return null;
+    }
+
+    // pozyskanie blockchaina od innych wezlow
     public async Task<Error?> ReceiveBlockchain()
     {
         var requestFrame =
-            JsonSerializer.Serialize(new Frame(Requests.GET_BLOCKCHAIN, JToken.FromObject((List<BlockType>) [])));
+            JsonSerializer.Serialize(new Frame(Requests.GET_BLOCKCHAIN, JToken.FromObject((List<BlockType>)[])));
 
         Console.WriteLine($"Próba wysłania danych: {requestFrame} do {IPs.Count} węzłów");
 

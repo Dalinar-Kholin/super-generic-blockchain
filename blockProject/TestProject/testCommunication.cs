@@ -22,12 +22,13 @@ public class testCommunication
     private WebApplication MakeApi()
     {
         var builder = WebApplication.CreateBuilder();
-        builder.WebHost.SuppressStatusMessages(true); 
+        builder.WebHost.SuppressStatusMessages(true);
         builder.Logging.ClearProviders();// uciszenie diagnostyki servera http
         var app = builder.Build();
         var api = app.MapGroup("/api");
 
-        var httpMaster = new HttpMaster(new DataSender());
+        DataSender sender = new DataSender();
+        var httpMaster = new HttpMaster(sender);
 
         api.MapGet("/addNewNode", httpMaster.AddNewNode);
 
@@ -43,8 +44,10 @@ public class testCommunication
         const int node1Port = 9999;
         const int node2Port = 8888;
         const string node2Ip = "127.0.0.1";
-        new Thread(new Listener(new SimpleTextCm(), node1Port).Start).Start();
-        new Thread(new Listener(new SimpleTextCm(), node2Port).Start).Start();
+
+        DataSender sender = new DataSender();
+        new Thread(new Listener(new SimpleTextCm(sender), node1Port).Start).Start();
+        new Thread(new Listener(new SimpleTextCm(sender), node2Port).Start).Start();
         var node1 = MakeApi();
         var node2 = MakeApi();
 

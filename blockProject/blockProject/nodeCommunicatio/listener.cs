@@ -55,6 +55,27 @@ public class Listener
                             await stream.WriteAsync(responseBytes);
                             // Console.WriteLine($"Wysłano blockchain {data}");
                             break;
+                        case Requests.ADD_BLOCK:
+                            Console.WriteLine($"Otrzymano blok: {receivedJson.data}");
+                            BlockType block = receivedJson.data.ToObject<BlockType>()!;
+
+                            // jakaś walidacja bloku + inne akcje gdyby blok był niepoprawny
+                            // TODO: implementacja tej metody
+
+                            // dodanie bloku do blockchaina
+                            Master.AddToBlockchain(block); // do zaimplementowania
+
+                            // wysłanie potwierdzenia otrzymania bloku
+                            var response = new { Request = Requests.ADD_BLOCK };
+                            var jsonResponse = JsonConvert.SerializeObject(response);
+                            Console.WriteLine($"Wysłano potwierdzenie otrzymania bloku: {jsonResponse}");
+                            await stream.WriteAsync(Encoding.UTF8.GetBytes(jsonResponse));
+
+                            // propagacja bloku do innych węzłów
+                            // TODO: implementacja algorytmu plotki
+                            Master.SendFurther(block); // do zaimplementowania
+
+                            break;
                         case Requests.CONNECTION_PING:
                             var result = new Frame(Requests.CONNECTION_PING, JToken.FromObject(""));
                             data = JsonConvert.SerializeObject(result);

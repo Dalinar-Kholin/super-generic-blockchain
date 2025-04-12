@@ -8,11 +8,35 @@ public class SimpleTextCm : ICommunicationMaster
     private const string BlockchainFile = "../../../data.json";
     private List<string> _nodes = new();
 
+    private readonly DataSender sender;
 
-    public void AddToBlockchain(string data)
+    public SimpleTextCm(DataSender sender)
     {
-        throw new NotImplementedException("Method not implemented yet.");
+        this.sender = sender;
     }
+
+
+    // bardzo podstawowa metoda do przesylanai bloku dalej
+    // trzeba tutaj zaimplementowac algorytm plotki
+    public void SendFurther(BlockType block)
+    {
+        var ips = sender.GetIps();
+        foreach (var ip in ips)
+        {
+            var error = sender.SendBlock(block).Result;
+            if (error != null)
+            {
+                Console.WriteLine($"Error sending block to {ip}: {error.Message}");
+            }
+        }
+    }
+
+    public void AddToBlockchain(BlockType block)
+    {
+        Console.WriteLine($"Adding block to blockchain: {block}");
+        return; // TODO: implementacja tej metody
+    }
+
 
     public void GetNodes()
     {
