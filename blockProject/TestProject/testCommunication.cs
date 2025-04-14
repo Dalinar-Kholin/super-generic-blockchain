@@ -46,8 +46,8 @@ public class testCommunication
         const string node2Ip = "127.0.0.1";
 
         DataSender sender = new DataSender();
-        new Thread(new Listener(new SimpleTextCm(sender), node1Port).Start).Start();
-        new Thread(new Listener(new SimpleTextCm(sender), node2Port).Start).Start();
+        new Thread(new Listener( node1Port).Start).Start();
+        new Thread(new Listener( node2Port).Start).Start();
         var node1 = MakeApi();
         var node2 = MakeApi();
 

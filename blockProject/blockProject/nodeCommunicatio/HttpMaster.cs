@@ -17,6 +17,7 @@ public class HttpMaster
     public async Task SendBlock(HttpContext context)
     {
         //testowe dane
+        //robić to w testach a nie w main kodzie
         Record record = new Record("test", "test");
         BlockType block = new BlockType("0x0");
         block.AddRecord(record);

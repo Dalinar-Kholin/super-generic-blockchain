@@ -2,9 +2,8 @@
 
 namespace blockProject.blockchain;
 
-public static class BlockManager
+/*public static class BlockManager
 {
-    private static readonly string filePath = "../../../data.json"; // plik z blockchainem
 
     public static void SaveBlockchain(List<BlockType> chain)
     {
@@ -30,4 +29,4 @@ public static class BlockManager
     {
         return JsonSerializer.Deserialize<BlockType>(json)!; // użycie ! zakłada że deserializacja się powiedzie
     }
-}
+}*/

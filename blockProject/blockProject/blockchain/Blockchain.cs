@@ -1,37 +1,43 @@
 global using BlockType = blockProject.blockchain.Block; // alias na typ aktualnie używanego bloku
 using System.Text.Json;
+using blockProject.nodeCommunicatio;
 
 namespace blockProject.blockchain;
 
 public class Blockchain : IBlockchain<BlockType>
 {
     private static Blockchain? _instance;
+    
     private readonly Mutex _mutex = new();
+    
     private readonly IValidator validator = new Validator();
-    private List<BlockType> _chain = new();
-
+    public List<BlockType> chain;
+    private readonly IblockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
+    
+    // najowszy blok gdzie będziemy przekazywać dane rekordu
+    // a następnie przy spełnieniu warunków jest commitowany do blockchainu
+    public BlockType newestBlock = new BlockType(); 
 
     private Blockchain()
     {
-        LoadData();
+        var (storedChain, error) = _blockchainDataHandler.readBlockchain();
+        if (error != null) { // jeżeli nie udało się załadować blockchainu spadamy z rowerka
+            Console.WriteLine($"nie udało się załadować blockchainu z powodu {error.Message}");
+            Environment.Exit(1);
+        }
+
+        this.chain = storedChain;
+        // czytanie blockchainu z pliku
     }
 
-    public void setChain(List<BlockType> chain)
-    {
-        _chain = chain;
-    }
-    
     public void CreateBlock(BlockType block)
     {
         _mutex.WaitOne();
 
         block.Hash = validator.calcHash(block);
         block.DataHash = validator.calcDataHash(block);
-
-        _chain.Add(block);
-
-        //BlockManager.SaveBlockchain(_chain); // robi straszny syf podczas testów, wyekstrachowałbym to do osobnej funkcji
-
+        
+        chain.Add(block);
         _mutex.ReleaseMutex();
     }
 
@@ -44,32 +50,20 @@ public class Blockchain : IBlockchain<BlockType>
             return;
         }
 
-        _chain.Add(block);
-        //BlockManager.SaveBlockchain(_chain);
+        chain.Add(block);
         _mutex.ReleaseMutex();
     }
 
     public string GetParsedBlockchain()
     {
-        return JsonSerializer.Serialize(_chain);
+        return JsonSerializer.Serialize(chain);
     }
     
     public List<BlockType> GetBlockchain()
     {
-        return _chain;
+        return chain;
     }
-
-    public void LoadData()
-    {
-        _chain = BlockManager.LoadBlockchain();
-    }
-
-    public void BroadcastBlock(BlockType block)
-    {
-        // todo: dodać prawdziwą logikę wysyłania do innych węzłów
-        // to nie jest zadanie blockchainu tylko sendera
-        Console.WriteLine("Broadcasting block: " + BlockManager.SerializeBlock(block));
-    }
+    
 
     public static Blockchain GetInstance()
     {

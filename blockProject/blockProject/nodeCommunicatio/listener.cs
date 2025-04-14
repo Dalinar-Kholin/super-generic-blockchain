@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using blockProject.blockchain;
 using blockProject.nodeCommunicatio.communicationFrames;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -10,12 +11,11 @@ namespace blockProject.nodeCommunicatio;
 public class Listener
 {
     private readonly int _port;
-    public ICommunicationMaster Master;
-
-    public Listener(ICommunicationMaster master, int port)
+    private readonly IblockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
+    private DataSender _sender = new DataSender();
+    public Listener(int port)
     {
         _port = port;
-        Master = master;
     }
 
     public async void Start()
@@ -49,7 +49,7 @@ public class Listener
                     {
                         // zmienić to potem na communication mastera
                         case Requests.GET_BLOCKCHAIN:
-                            var res = new Frame(Requests.GET_BLOCKCHAIN, JToken.FromObject(Master.GetBlockchain()));
+                            var res = new Frame(Requests.GET_BLOCKCHAIN, JToken.FromObject(Blockchain.GetInstance().chain));
                             data = JsonConvert.SerializeObject(res);
                             responseBytes = Encoding.UTF8.GetBytes(data);
                             await stream.WriteAsync(responseBytes);
@@ -61,10 +61,10 @@ public class Listener
 
                             // jakaś walidacja bloku + inne akcje gdyby blok był niepoprawny
                             // TODO: implementacja tej metody
-
                             // dodanie bloku do blockchaina
-                            Master.AddToBlockchain(block); // do zaimplementowania
-
+                            Blockchain.GetInstance().AddBlock(block);
+                                //AddToBlockchain(block); // do zaimplementowania
+                            _blockchainDataHandler.writeBlockc(block); // zapisz blockchain do pliku
                             // wysłanie potwierdzenia otrzymania bloku
                             var response = new { Request = Requests.ADD_BLOCK };
                             var jsonResponse = JsonConvert.SerializeObject(response);
@@ -73,7 +73,16 @@ public class Listener
 
                             // propagacja bloku do innych węzłów
                             // TODO: implementacja algorytmu plotki
-                            Master.SendFurther(block); // do zaimplementowania
+                            // Master.SendFurther(block); // do zaimplementowania
+                            var ips = _sender.GetIps();
+                            foreach (var ip in ips)
+                            {
+                                var error = _sender.SendBlock(block).Result;
+                                if (error != null)
+                                {
+                                    Console.WriteLine($"Error sending block to {ip}: {error.Message}");
+                                }
+                            }
 
                             break;
                         case Requests.CONNECTION_PING:

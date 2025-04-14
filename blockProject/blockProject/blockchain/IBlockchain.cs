@@ -7,8 +7,5 @@ public interface IBlockchain<T>
 
     void CreateBlock(T block); // gdy MY tworzymy blok
     void AddBlock(T block); // gdy dostajemy blok
-    void LoadData(); // wczytuje z pliku
 
-    void
-        BroadcastBlock(T block); // rozsyłanie bloku -- to nie jest zadanie blockchainu, wolałbym uniknąć tworzeniu God objectu 
 }

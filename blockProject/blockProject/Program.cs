@@ -13,7 +13,7 @@ internal class Program
         var sender = new DataSender();
         var httpMaster = new HttpMaster(sender);
 
-        new Thread(new Listener(new SimpleTextCm(sender), port).Start)
+        new Thread(new Listener(port).Start)
             .Start(); // włączamy wątek odpowiedzialny za nasłuchiwanie
 
         var builder = WebApplication.CreateBuilder();

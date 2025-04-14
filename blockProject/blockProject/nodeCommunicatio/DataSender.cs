@@ -14,6 +14,7 @@ namespace blockProject.nodeCommunicatio;
 public class DataSender
 {
     private readonly List<IPEndPoint> IPs = [];
+    private readonly IblockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
 
     public List<string> GetIps()
     {
@@ -92,7 +93,9 @@ public class DataSender
                 {
                     var blockchin = json.data.ToObject<List<BlockType>>();
                     // TODO: porównanie ze swoim blockchainem i załadowanie do pamięci
-                    Blockchain.GetInstance().setChain(blockchin ?? new List<BlockType>());
+                    var block = (blockchin ?? new List<BlockType>());
+                    Blockchain.GetInstance().chain = block;
+                    _blockchainDataHandler.writeBlockchain(block);
                     // Zapisz blockchain
                     return null;
                 }
