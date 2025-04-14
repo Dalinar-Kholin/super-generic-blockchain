@@ -2,7 +2,7 @@ projekt generic blockchain
 
 realizowane przez studentów UWr we współpracy z Nokią 
 
-uczestnicy: Kacper Osadowski, Taras Tsehenko
+uczestnicy: Kacper Osadowski, Marceli Buczek, Taras Tsehenko, Yelyzaveta Ilman 
 
 wymagane jest środowisko dotnet w wersji 9.0.X
 
