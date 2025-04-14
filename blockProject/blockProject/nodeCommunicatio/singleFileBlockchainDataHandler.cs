@@ -16,13 +16,16 @@ public class singleFileBlockchainDataHandler : IblockchainDataHandler
 {
     private static string _filePath = "../../../data.json";
     private static singleFileBlockchainDataHandler? _instance;
+    private Mutex mut = new Mutex();
 
     private singleFileBlockchainDataHandler() { }
     
     public Error? writeBlockchain(List<BlockType> blocks)
     {
+        mut.WaitOne();
         string parsedJson = JsonSerializer.Serialize(blocks);
         File.WriteAllText(_filePath, parsedJson);
+        mut.ReleaseMutex();
         return null;
     }
 
@@ -36,10 +39,18 @@ public class singleFileBlockchainDataHandler : IblockchainDataHandler
         return null;
     }
 
-    public (List<BlockType>, Error?) readBlockchain() {
-        if (!File.Exists(_filePath)) return (new(), new Error("there is no selected file"));
+    public (List<BlockType>, Error?) readBlockchain()
+    {
+        mut.WaitOne();
+        if (!File.Exists(_filePath))
+        {
+            mut.ReleaseMutex();
+            return (new(), new Error("there is no selected file"));
+        }
         var json = File.ReadAllText(_filePath);
         var chain = JsonSerializer.Deserialize<List<BlockType>>(json) ?? new List<BlockType>();
+        mut.ReleaseMutex();
+        
         return (chain, null);
     }
 
