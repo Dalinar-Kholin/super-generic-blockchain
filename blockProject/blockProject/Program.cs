@@ -28,8 +28,10 @@ internal class Program
 
         //sprawdzenie czy komunikacja działa
         api.MapGet("/sendMessage", httpMaster.SendMessage);
-
+        
         api.MapGet("/getNode", (HttpContext httpContext) => "essa");
+        
+        api.MapGet("/getStats", httpMaster.GetStat);
 
 
 

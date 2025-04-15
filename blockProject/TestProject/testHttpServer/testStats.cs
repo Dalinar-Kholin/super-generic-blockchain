@@ -1,0 +1,84 @@
+using System.Net;
+using blockProject.nodeCommunicatio;
+using Newtonsoft.Json;
+
+namespace TestProject.testHttpServer;
+
+public class testStats
+{
+    
+    [Trait("cat", "http")]
+    [Fact]
+    public async Task basicTestStats()
+    {
+        const int node1Port = 9988;
+        const int node2Port = 8899;
+        const string node2Ip = "127.0.0.1";
+
+        DataSender sender = new DataSender();
+        new Thread(new Listener( node1Port).Start).Start();
+        new Thread(new Listener( node2Port).Start).Start();
+        var node1 = TestHelper.MakeApi();
+        var node2 = TestHelper.MakeApi();
+
+        new Thread(
+            () => { node1.Run($"http://127.0.0.1:{node1Port + 1}/"); }
+        ).Start();
+        new Thread(
+            () => { node2.Run($"http://127.0.0.1:{node2Port + 1}/"); }
+        ).Start();
+        using (var client = new HttpClient())
+        {
+            while (true)
+                try
+                {
+                    var response1Task = client.GetAsync($"http://127.0.0.1:{node1Port + 1}/api/ping");
+                    var response2Task = client.GetAsync($"http://127.0.0.1:{node2Port + 1}/api/ping");
+                    var responses = await Task.WhenAll(response1Task, response2Task);
+                    if (responses[0].StatusCode == HttpStatusCode.OK &&
+                        responses[1].StatusCode == HttpStatusCode.OK) break;
+                } // czeakanie aż servery http się włączą
+                catch (Exception)
+                {
+                }
+        }
+
+        
+        using (var client = new HttpClient())
+        {
+            try
+            {
+                var response = await client.GetAsync($"http://127.0.0.1:{node1Port + 1}/api/addNewNode?port={node2Port}&ip={node2Ip}");
+                Assert.Equal(200, (int)response.StatusCode);
+                response = await client.GetAsync($"http://127.0.0.1:{node1Port + 1}/api/addNewNode?port={node2Port}&ip={node2Ip}");
+                Assert.Equal(200, (int)response.StatusCode);
+                response = await client.GetAsync($"http://127.0.0.1:{node1Port + 1}/api/addNewNode?port={node2Port}&ip={node2Ip}");
+                Assert.Equal(200, (int)response.StatusCode); // sprawdzamy od razu czy nie powtarzamy węzłów
+                
+                response = await client.GetAsync($"http://127.0.0.1:{node1Port + 1}/api/getStats");
+                var body = await response.Content.ReadAsStringAsync();
+
+                var deserialized = JsonConvert.DeserializeAnonymousType(body, new
+                {
+                    blockCount = 0,
+                    recordCount = 0,
+                    workingTime = 0,
+                    friendNodeCount = 0,
+                    friendNode = new string[]{}
+                });
+                
+                Assert.NotNull(deserialized);
+                Assert.Equal(5, deserialized.blockCount);
+                Assert.Equal(6, deserialized.recordCount);
+                Assert.True(deserialized.friendNode.Length == 1);
+                Assert.Equal(new IPEndPoint(IPAddress.Parse(node2Ip), node2Port).ToString(), deserialized.friendNode[0]);
+                
+            }
+            catch (Exception e)
+            {
+                Assert.Fail($"cant handle communication {e}\n");
+            }
+        }
+    }
+    
+}

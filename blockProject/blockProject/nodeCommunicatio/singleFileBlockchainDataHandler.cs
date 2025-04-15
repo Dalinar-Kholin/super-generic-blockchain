@@ -1,4 +1,4 @@
-using System.Text.Json;
+using Newtonsoft.Json;
 using blockProject.randomSrc;
 
 namespace blockProject.nodeCommunicatio;
@@ -14,7 +14,7 @@ public interface IblockchainDataHandler
 
 public class singleFileBlockchainDataHandler : IblockchainDataHandler
 {
-    private static string _filePath = "../../../data.json";
+    private static string _filePath = "data.json";
     private static singleFileBlockchainDataHandler? _instance;
     private Mutex mut = new Mutex();
 
@@ -23,7 +23,8 @@ public class singleFileBlockchainDataHandler : IblockchainDataHandler
     public Error? writeBlockchain(List<BlockType> blocks)
     {
         mut.WaitOne();
-        string parsedJson = JsonSerializer.Serialize(blocks);
+
+        string parsedJson = JsonConvert.SerializeObject(blocks);
         File.WriteAllText(_filePath, parsedJson);
         mut.ReleaseMutex();
         return null;
@@ -48,7 +49,7 @@ public class singleFileBlockchainDataHandler : IblockchainDataHandler
             return (new(), new Error("there is no selected file"));
         }
         var json = File.ReadAllText(_filePath);
-        var chain = JsonSerializer.Deserialize<List<BlockType>>(json) ?? new List<BlockType>();
+        var chain = JsonConvert.DeserializeObject<List<BlockType>>(json) ?? new List<BlockType>();
         mut.ReleaseMutex();
         
         return (chain, null);

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using blockProject.blockchain;
 using blockProject.nodeCommunicatio.communicationFrames;
@@ -23,6 +24,7 @@ public class DataSender
 
     public void AddIP(IPEndPoint ip)
     {
+        if (IPs.Aggregate(false, (acc, x) => acc ? acc : x.ToString() == ip.ToString())) return; // sprawdzenie czy n ie mamy już takiego IP na liście
         IPs.Add(ip);
     }
 

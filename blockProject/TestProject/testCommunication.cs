@@ -10,16 +10,10 @@ using Xunit.Abstractions;
 
 namespace TestProject;
 
-public class testCommunication
+
+public class TestHelper()
 {
-    private readonly ITestOutputHelper _testOutputHelper;
-
-    public testCommunication(ITestOutputHelper testOutputHelper)
-    {
-        _testOutputHelper = testOutputHelper;
-    }
-
-    private WebApplication MakeApi()
+    public static WebApplication MakeApi()
     {
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.SuppressStatusMessages(true);
@@ -35,8 +29,21 @@ public class testCommunication
         api.MapGet("/sendMessage", httpMaster.SendMessage);
         api.MapGet("/ping", (HttpContext context) => "alive");
         api.MapGet("/getFriendIps", httpMaster.GetFriendIp);
+        api.MapGet("/getStats", httpMaster.GetStat);
         return app;
     }
+}
+
+public class testCommunication
+{
+    private readonly ITestOutputHelper _testOutputHelper;
+
+    public testCommunication(ITestOutputHelper testOutputHelper)
+    {
+        _testOutputHelper = testOutputHelper;
+    }
+
+    
 
     [Fact]
     public async Task testBasicCommunicationWithData()
@@ -48,8 +55,8 @@ public class testCommunication
         DataSender sender = new DataSender();
         new Thread(new Listener( node1Port).Start).Start();
         new Thread(new Listener( node2Port).Start).Start();
-        var node1 = MakeApi();
-        var node2 = MakeApi();
+        var node1 = TestHelper.MakeApi();
+        var node2 = TestHelper.MakeApi();
 
         new Thread(
             () => { node1.Run($"http://127.0.0.1:{node1Port + 1}/"); }
