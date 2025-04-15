@@ -14,7 +14,7 @@ public interface IblockchainDataHandler
 
 public class singleFileBlockchainDataHandler : IblockchainDataHandler
 {
-    private static string _filePath = "data.json";
+    public static string _filePath = "data.json";
     private static singleFileBlockchainDataHandler? _instance;
     private Mutex mut = new Mutex();
 
@@ -46,7 +46,7 @@ public class singleFileBlockchainDataHandler : IblockchainDataHandler
         if (!File.Exists(_filePath))
         {
             mut.ReleaseMutex();
-            return (new(), new Error("there is no selected file"));
+            return (new(), new Error($"there is no selected file "));
         }
         var json = File.ReadAllText(_filePath);
         var chain = JsonConvert.DeserializeObject<List<BlockType>>(json) ?? new List<BlockType>();

@@ -11,6 +11,9 @@ public class testStats
     [Fact]
     public async Task basicTestStats()
     {
+        singleFileBlockchainDataHandler._filePath = "../../../data.json";
+        Console.WriteLine($"{Directory.GetCurrentDirectory()}");
+        
         const int node1Port = 9988;
         const int node2Port = 8899;
         const string node2Ip = "127.0.0.1";

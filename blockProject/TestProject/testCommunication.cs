@@ -48,6 +48,7 @@ public class testCommunication
     [Fact]
     public async Task testBasicCommunicationWithData()
     {
+        singleFileBlockchainDataHandler._filePath = "../../../data.json";
         const int node1Port = 9999;
         const int node2Port = 8888;
         const string node2Ip = "127.0.0.1";

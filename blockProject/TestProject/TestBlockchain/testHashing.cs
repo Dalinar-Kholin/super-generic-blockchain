@@ -1,4 +1,5 @@
 using blockProject.blockchain;
+using blockProject.nodeCommunicatio;
 using Record = blockProject.blockchain.Record;
 
 namespace TestProject.TestBlockchain;
@@ -42,6 +43,7 @@ public class testHashing
     [Fact]
     public void Test1()
     {
+        singleFileBlockchainDataHandler._filePath = "../../../data.json";
         var block = new Block("0x0");
         block.AddRecord(new Record("esssa", "w chuj"));
         block.AddRecord(new Record("456", "123"));
@@ -74,6 +76,7 @@ public class testHashing
     [Fact]
     public void Test2()
     {
+        singleFileBlockchainDataHandler._filePath = "../../../data.json";
         var block = new Block("0x0");
         var random = getRandomString(10);
         block.AddRecord(new Record(random, random));
