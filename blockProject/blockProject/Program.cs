@@ -1,3 +1,4 @@
+using blockProject.blockchain;
 using blockProject.nodeCommunicatio;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -8,7 +9,20 @@ internal class Program
 {
     private static void Main(string[] args)
     {
+        Console.WriteLine("XD");
         var port = int.Parse(args[0]);
+
+
+        // inicjalizacja blockchainu,
+        var dh = singleFileBlockchainDataHandler.GetInstance();
+        dh._filePath = "data.json";
+        var (storedChain, error) = dh.readBlockchain();
+        if (error != null) { // jeżeli nie udało się załadować blockchainu spadamy z rowerka
+            Console.WriteLine($"nie udało się załadować blockchainu z powodu {error.Message}");
+            Environment.Exit(1);
+        }
+
+        Blockchain.GetInstance().SetChain(storedChain);
 
         var sender = new DataSender();
         var httpMaster = new HttpMaster(sender);
@@ -32,6 +46,8 @@ internal class Program
         api.MapGet("/getNode", (HttpContext httpContext) => "essa");
         
         api.MapGet("/getStats", httpMaster.GetStat);
+        
+        api.MapPost("/addRecord", httpMaster.AddRecord);
 
 
 

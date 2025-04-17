@@ -58,7 +58,7 @@ public class testCommunication
             Console.WriteLine($"nie udało się załadować blockchainu z powodu {error.Message}");
             Environment.Exit(1);
         }
-        Blockchain.GetInstance().chain = storedChain;
+        Blockchain.GetInstance().SetChain(storedChain);
         
         const int node1Port = 9999;
         const int node2Port = 8888;

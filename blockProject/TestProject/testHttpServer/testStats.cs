@@ -23,7 +23,7 @@ public class testStats
             Environment.Exit(1);
         }
         
-        Blockchain.GetInstance().chain = storedChain;
+        Blockchain.GetInstance().SetChain(storedChain);
         
         
         const int node1Port = 9988;

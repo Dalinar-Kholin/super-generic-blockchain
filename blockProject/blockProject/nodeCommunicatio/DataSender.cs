@@ -32,6 +32,7 @@ public class DataSender
     // wyslanie bloku do sasiadów
     public async Task<Error?> SendBlock(BlockType block)
     {
+        Console.WriteLine("wysyłamy blok");
         foreach (var ip in IPs) // przy metodzie plotki przesyłamy do losowych sąsiadów w liczbie x
         {
             var requestFrame =
@@ -66,6 +67,13 @@ public class DataSender
         }
         return null;
     }
+    
+    public async Task<Error?> SendRecord(Record record)
+    {
+        await Task.Delay(100);
+        return null;
+    }
+    
 
     // pozyskanie blockchaina od innych wezlow
     public async Task<Error?> ReceiveBlockchain()
@@ -90,13 +98,12 @@ public class DataSender
                 var readed = await stream.ReadAsync(buffer);
                 var result = Encoding.UTF8.GetString(buffer, 0, readed);
                 var json = JsonConvert.DeserializeObject<Frame>(result);
-
                 if (json is { Request: Requests.GET_BLOCKCHAIN })
                 {
                     var blockchin = json.data.ToObject<List<BlockType>>();
                     // TODO: porównanie ze swoim blockchainem i załadowanie do pamięci
                     var block = (blockchin ?? new List<BlockType>());
-                    Blockchain.GetInstance().chain = block;
+                    Blockchain.GetInstance().SetChain(block);
                     _blockchainDataHandler.writeBlockchain(block);
                     // Zapisz blockchain
                     return null;
@@ -113,7 +120,7 @@ public class DataSender
         return null;
     }
 
-    public async Task<Error?> SendData<T>(IBlockchain<T> blockchain)
+    public async Task<Error?> SendData<T, E>(IBlockchain<T, E> blockchain)
     {
         foreach (var ip in IPs)
         {

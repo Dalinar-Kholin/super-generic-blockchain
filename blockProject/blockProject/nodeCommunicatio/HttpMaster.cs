@@ -8,7 +8,7 @@ namespace blockProject.nodeCommunicatio;
 public class HttpMaster
 {
     private readonly DataSender sender;
-    private readonly Int64 startTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds(); 
+    private readonly long startTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
     public HttpMaster(DataSender sender)
     {
@@ -20,8 +20,8 @@ public class HttpMaster
     {
         //testowe dane
         //robić to w testach a nie w main kodzie
-        Record record = new Record("test", "test");
-        BlockType block = new BlockType("0x0");
+        var record = new Record("test", "test");
+        var block = new BlockType("0x0");
         block.AddRecord(record);
 
         Console.WriteLine($"Wysłano blok: {block}");
@@ -37,12 +37,14 @@ public class HttpMaster
             });
             return;
         }
+
         await context.Response.WriteAsJsonAsync(new
         {
             success = true,
             message = "Block sent successfully"
         });
     }
+
     public async Task AddNewNode(HttpContext context)
     {
         if (context.Request.Query.TryGetValue("port", out var port) &&
@@ -82,14 +84,16 @@ public class HttpMaster
             });
         }
     }
+
     public async Task GetFriendIp(HttpContext context)
     {
         context.Response.ContentType = "application/json";
         await context.Response.WriteAsJsonAsync(new { result = sender.GetIps() });
     }
+
     public async Task SendMessage(HttpContext context)
     {
-        IBlockchain<BlockType> block = Blockchain.GetInstance();
+        IBlockchain<BlockType, Record> block = Blockchain.GetInstance();
         var res = await sender.SendData(block);
         Console.WriteLine(res != null ? $"pojawił się błąd {res.Message}" : "success");
 
@@ -104,26 +108,46 @@ public class HttpMaster
     }
 
     
-    
-    
+    // zapytanie curl -X POST http://<ip>:<port>/api/addRecord -d '{Key: "data", Value: "data"}'
+    // powinno zwrócić JSON {"result" : "success"}
+    public async Task AddRecord(HttpContext context)
+    {
+        IBlockchain<BlockType, Record> block = Blockchain.GetInstance();
+        
+        using var reader = new StreamReader(context.Request.Body);
+        var body = await reader.ReadToEndAsync();
+        // zakładam że w body będzie JSON o typie Record
+        var record = JsonConvert.DeserializeObject<Record>(body);
+        if (record == null) return;
+        Console.WriteLine($"wartość rekordu{record}");
+
+        var rec = block.AddRecord(record);
+        await sender.SendRecord(record);
+        if (rec != null) await sender.SendBlock(rec);
+
+        await context.Response.WriteAsJsonAsync(new {result = "success"});
+    }
+
+
     /* metoda powinna zwrócić coś w stylu {"blockCount":5,"recordCount":6,"workingTime":16,"friendNodeCount":0,"friendNode":[]}
     gdzie blockCount: int - ile jest bloków w blockchaine, recordCount: int - liczba dyskretnych ramek danych, workingTime: int64 - czas działania servera w sekundach, friendNodeCount: int - liczba znajomych węzłów, friendNode: []string - tablica stringów w postaci ip:port*/
     public async Task GetStat(HttpContext context)
     {
         context.Response.ContentType = "application/json";
         // TODO: dodać ile my wyprodukowaliśmy węzłów oraz rekordów danych
-        await context.Response.WriteAsJsonAsync(new {
-            blockCount = Blockchain.GetInstance().chain.Count,
-            recordCount = Blockchain.GetInstance().chain.Aggregate(new List<Record>(), (acc, x ) =>
+        var chain = Blockchain.GetInstance().GetChain();
+
+        await context.Response.WriteAsJsonAsync(new
+        {
+            blockCount = chain.Count,
+            recordCount = chain.Aggregate(new List<Record>(), (acc, x) =>
             {
                 acc.AddRange(x.Records);
                 return acc;
             }).Count, // taki brzydki fold i w sumie to pewnie mniej wydajny
-            workingTime = (DateTimeOffset.UtcNow.ToUnixTimeSeconds() - startTime),
+            workingTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - startTime,
             friendNodeCount = sender.GetIps().Count,
             friendNode = sender.GetIps()
         });
-        
     }
-    
 }

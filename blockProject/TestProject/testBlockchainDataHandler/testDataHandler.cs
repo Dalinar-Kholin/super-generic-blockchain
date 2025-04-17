@@ -20,7 +20,9 @@ public class testDataHandler
         var block = new Block("0x0");
         block.AddRecord(new Record("esssa", "w chuj"));
         block.AddRecord(new Record("456", "123"));
-        var blockchain = Blockchain.GetInstance();
+        
+        IBlockchain<Block, Record> blockchain = Blockchain.GetInstance();
+        
         blockchain.CreateBlock(block);
         var block1 = new Block(block.Hash);
         block.AddRecord(new Record("fajny", "pieniąź"));
@@ -34,7 +36,7 @@ public class testDataHandler
         block1 = new Block(block1.Hash);
         block1.AddRecord(new Record(getRandomString(5), getRandomString(5)));
         blockchain.CreateBlock(block1);
-        return blockchain.chain;
+        return blockchain.GetChain();
     }
     
     

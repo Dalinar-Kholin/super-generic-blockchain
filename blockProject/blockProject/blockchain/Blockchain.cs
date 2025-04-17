@@ -1,23 +1,23 @@
 global using BlockType = blockProject.blockchain.Block; // alias na typ aktualnie używanego bloku
 using System.Text.Json;
 using blockProject.nodeCommunicatio;
+using Newtonsoft.Json;
 
 namespace blockProject.blockchain;
 
-public class Blockchain : IBlockchain<BlockType>
+public class Blockchain : IBlockchain<BlockType, Record>
 {
     private static Blockchain? _instance;
     
     private readonly Mutex _mutex = new();
     
     private readonly IValidator validator = new Validator();
-    public List<BlockType> chain = new ();
+    private List<BlockType> chain = new ();
     private readonly IblockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
     
     // najowszy blok gdzie będziemy przekazywać dane rekordu
     // a następnie przy spełnieniu warunków jest commitowany do blockchainu
     public BlockType newestBlock = new BlockType(); 
-
     private Blockchain()
     {
         // taka głupotka, ponieważ zakłada że mamy już stworzony plik z blockchainem, utrudnia testowanie 
@@ -28,7 +28,23 @@ public class Blockchain : IBlockchain<BlockType>
         }
 
         this.chain = storedChain;*/
-        
+    }
+    
+    // zwraca nam ilość elementów w recordzie
+    public BlockType? AddRecord(Record Record)
+    {
+        var rec = newestBlock.Records; 
+        rec.Add(Record);
+
+        if (rec.Count >= 3)
+        {
+            var newBlock = newestBlock;
+            newBlock.Hash = validator.calcHash(newBlock);
+            newBlock.DataHash = validator.calcDataHash(newBlock);
+            newestBlock = new BlockType();
+            return newBlock;
+        }
+        return null;
     }
 
     public void CreateBlock(BlockType block)
@@ -55,9 +71,19 @@ public class Blockchain : IBlockchain<BlockType>
         _mutex.ReleaseMutex();
     }
 
+    public List<BlockType> GetChain()
+    {
+        return chain;
+    }
+
+    public void SetChain(List<BlockType> blockchain)
+    {
+        chain = blockchain;
+    }
+
     public string GetParsedBlockchain()
     {
-        return JsonSerializer.Serialize(chain);
+        return JsonConvert.SerializeObject(chain);
     }
     
     public List<BlockType> GetBlockchain()

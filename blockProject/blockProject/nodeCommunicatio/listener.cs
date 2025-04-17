@@ -49,7 +49,7 @@ public class Listener
                     {
                         // zmienić to potem na communication mastera
                         case Requests.GET_BLOCKCHAIN:
-                            var res = new Frame(Requests.GET_BLOCKCHAIN, JToken.FromObject(Blockchain.GetInstance().chain));
+                            var res = new Frame(Requests.GET_BLOCKCHAIN, JToken.FromObject(Blockchain.GetInstance().GetChain()));
                             data = JsonConvert.SerializeObject(res);
                             responseBytes = Encoding.UTF8.GetBytes(data);
                             await stream.WriteAsync(responseBytes);

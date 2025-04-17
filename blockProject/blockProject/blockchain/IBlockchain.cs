@@ -1,11 +1,15 @@
 namespace blockProject.blockchain;
 
 // jakie metody powinnien udostępniać nasz blockchain
-public interface IBlockchain<T>
+public interface IBlockchain<T, Z>
 {
     string GetParsedBlockchain(); // zwraca jako json
 
+    T? AddRecord(Z Record);
     void CreateBlock(T block); // gdy MY tworzymy blok
     void AddBlock(T block); // gdy dostajemy blok
+
+    List<BlockType> GetChain();
+    void SetChain(List<BlockType> blockchain);
 
 }
