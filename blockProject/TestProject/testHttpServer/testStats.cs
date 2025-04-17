@@ -1,9 +1,13 @@
 using System.Net;
+using blockProject.blockchain;
 using blockProject.nodeCommunicatio;
 using Newtonsoft.Json;
 
 namespace TestProject.testHttpServer;
 
+
+
+[Collection("SequentialTests")]
 public class testStats
 {
     
@@ -11,8 +15,16 @@ public class testStats
     [Fact]
     public async Task basicTestStats()
     {
-        singleFileBlockchainDataHandler._filePath = "../../../data.json";
-        Console.WriteLine($"{Directory.GetCurrentDirectory()}");
+        var dh = singleFileBlockchainDataHandler.GetTestInstance();
+        dh._filePath = "../../../data.json";
+        var (storedChain, error) = dh.readBlockchain();
+        if (error != null) { // jeżeli nie udało się załadować blockchainu spadamy z rowerka
+            Console.WriteLine($"nie udało się załadować blockchainu z powodu {error.Message}");
+            Environment.Exit(1);
+        }
+        
+        Blockchain.GetInstance().chain = storedChain;
+        
         
         const int node1Port = 9988;
         const int node2Port = 8899;
@@ -82,6 +94,7 @@ public class testStats
                 Assert.Fail($"cant handle communication {e}\n");
             }
         }
+        Blockchain.Reset();
     }
     
 }

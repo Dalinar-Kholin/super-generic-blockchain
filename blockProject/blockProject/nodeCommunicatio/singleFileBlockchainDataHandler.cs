@@ -5,6 +5,7 @@ namespace blockProject.nodeCommunicatio;
 
 public interface IblockchainDataHandler
 {
+    Error? editBlock(string blockhash, BlockType block);
     Error? writeBlockchain(List<BlockType> blocks);
     Error? writeBlockc(BlockType blocks);
     (List<BlockType>, Error?) readBlockchain();
@@ -14,18 +15,40 @@ public interface IblockchainDataHandler
 
 public class singleFileBlockchainDataHandler : IblockchainDataHandler
 {
-    public static string _filePath = "data.json";
+    public string _filePath = "data.json";
     private static singleFileBlockchainDataHandler? _instance;
     private Mutex mut = new Mutex();
 
     private singleFileBlockchainDataHandler() { }
+
     
+    
+    // ta funckcja nie ma sensu jeżeli nie modyfikujemy ostatniego bloku, ponieważ będziemy niszczyć ciąg hashy
+    public Error? editBlock(string blockhash, BlockType block)
+    {
+        var (res, err) = readBlockchain();
+        if (err != null) return err;
+
+        var index = res.FindIndex(b => b.Hash == blockhash);
+        if (index == -1) return new Error("there is no selected hash in blockchain");
+        res[index] = block;
+        err = writeBlockchain(res);
+        return err;
+    }
+
     public Error? writeBlockchain(List<BlockType> blocks)
     {
         mut.WaitOne();
 
         string parsedJson = JsonConvert.SerializeObject(blocks);
-        File.WriteAllText(_filePath, parsedJson);
+        try
+        {
+            File.WriteAllText(_filePath, parsedJson);
+        }
+        catch (Exception e)
+        {
+            return new Error(e.Message);
+        }
         mut.ReleaseMutex();
         return null;
     }
@@ -71,6 +94,9 @@ public class singleFileBlockchainDataHandler : IblockchainDataHandler
     
     public static singleFileBlockchainDataHandler GetInstance() {
         return _instance ??=new  ();
+    }
+    public static singleFileBlockchainDataHandler GetTestInstance() {
+        return new  ();
     }
 }
 

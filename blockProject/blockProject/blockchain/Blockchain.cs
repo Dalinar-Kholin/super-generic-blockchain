@@ -11,7 +11,7 @@ public class Blockchain : IBlockchain<BlockType>
     private readonly Mutex _mutex = new();
     
     private readonly IValidator validator = new Validator();
-    public List<BlockType> chain;
+    public List<BlockType> chain = new ();
     private readonly IblockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
     
     // najowszy blok gdzie będziemy przekazywać dane rekordu
@@ -20,14 +20,15 @@ public class Blockchain : IBlockchain<BlockType>
 
     private Blockchain()
     {
-        var (storedChain, error) = _blockchainDataHandler.readBlockchain();
+        // taka głupotka, ponieważ zakłada że mamy już stworzony plik z blockchainem, utrudnia testowanie 
+        /*var (storedChain, error) = _blockchainDataHandler.readBlockchain();
         if (error != null) { // jeżeli nie udało się załadować blockchainu spadamy z rowerka
             Console.WriteLine($"nie udało się załadować blockchainu z powodu {error.Message}");
             Environment.Exit(1);
         }
 
-        this.chain = storedChain;
-        // czytanie blockchainu z pliku
+        this.chain = storedChain;*/
+        
     }
 
     public void CreateBlock(BlockType block)
@@ -68,6 +69,11 @@ public class Blockchain : IBlockchain<BlockType>
     public static Blockchain GetInstance()
     {
         return _instance ??= new Blockchain();
+    }
+    
+    public static Blockchain GetTestInstance()
+    {
+        return new Blockchain();
     }
 
     // Metoda dostępna tylko w środowisku testowym

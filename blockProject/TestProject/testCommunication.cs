@@ -10,7 +10,11 @@ using Xunit.Abstractions;
 
 namespace TestProject;
 
+[CollectionDefinition("SequentialTests", DisableParallelization = true)]
+public class SequentialTestsCollection { }
 
+
+[Collection("SequentialTests")]
 public class TestHelper()
 {
     public static WebApplication MakeApi()
@@ -44,11 +48,18 @@ public class testCommunication
     }
 
     
-
     [Fact]
     public async Task testBasicCommunicationWithData()
     {
-        singleFileBlockchainDataHandler._filePath = "../../../data.json";
+        var dh = singleFileBlockchainDataHandler.GetTestInstance();
+        dh._filePath = "../../../data.json";
+        var (storedChain, error) = dh.readBlockchain();
+        if (error != null) { // jeżeli nie udało się załadować blockchainu spadamy z rowerka
+            Console.WriteLine($"nie udało się załadować blockchainu z powodu {error.Message}");
+            Environment.Exit(1);
+        }
+        Blockchain.GetInstance().chain = storedChain;
+        
         const int node1Port = 9999;
         const int node2Port = 8888;
         const string node2Ip = "127.0.0.1";
@@ -124,5 +135,6 @@ public class testCommunication
                 Assert.Fail($"cant handle communication {e}\n");
             }
         }
+        Blockchain.Reset();
     }
 }
