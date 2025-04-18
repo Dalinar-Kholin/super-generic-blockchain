@@ -110,6 +110,7 @@ public class HttpMaster
     
     // zapytanie curl -X POST http://<ip>:<port>/api/addRecord -d '{Key: "data", Value: "data"}'
     // powinno zwrócić JSON {"result" : "success"}
+    // TODO: do przetestowania automatycznego
     public async Task AddRecord(HttpContext context)
     {
         IBlockchain<BlockType, Record> block = Blockchain.GetInstance();

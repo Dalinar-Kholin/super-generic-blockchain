@@ -6,12 +6,15 @@ namespace TestProject.TestBlockchain;
 
 
 
+
+
+
+
 [Collection("SequentialTests")]
 public class testHashing
 {
     [Trait("cat", "genBlock")]
-    //[Fact]
-    public void generateBlockchain()
+    internal void generateBlockchain()
     {
         var block = new Block("0x0");
         block.AddRecord(new Record("esssa", "w chuj"));
@@ -29,13 +32,13 @@ public class testHashing
         block.AddRecord(new Record("fajny", "pieniąź"));
         blockchain.CreateBlock(block1);
         block1 = new Block(block1.Hash);
-        block1.AddRecord(new Record(getRandomString(5), getRandomString(5)));
+        block1.AddRecord(new Record(testHelper.getRandomString(5),testHelper.getRandomString(5)));
         blockchain.CreateBlock(block1);
         block1 = new Block(block1.Hash);
-        block1.AddRecord(new Record(getRandomString(5), getRandomString(5)));
+        block1.AddRecord(new Record(testHelper.getRandomString(5), testHelper.getRandomString(5)));
         blockchain.CreateBlock(block1);
         block1 = new Block(block1.Hash);
-        block1.AddRecord(new Record(getRandomString(5), getRandomString(5)));
+        block1.AddRecord(new Record(testHelper.getRandomString(5), testHelper.getRandomString(5)));
         blockchain.CreateBlock(block1);
         Console.WriteLine($"chain Data := {blockchain.GetParsedBlockchain()}");
         Blockchain.Reset();
@@ -64,21 +67,13 @@ public class testHashing
     }
 
 
-    public static string getRandomString(int dlugosc)
-    {
-        const string znaki = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        var random = new Random();
-        var wynik = new char[dlugosc];
-        for (var i = 0; i < dlugosc; i++) wynik[i] = znaki[random.Next(znaki.Length)];
-
-        return new string(wynik);
-    }
+    
     [Trait("cat", "blockchainTest")]
     [Fact]
     public void Test2()
     {
         var block = new Block("0x0");
-        var random = getRandomString(10);
+        var random = testHelper.getRandomString(10);
         block.AddRecord(new Record(random, random));
         var blockchain = Blockchain.GetTestInstance();
         blockchain.CreateBlock(block);

@@ -61,8 +61,10 @@ public class Blockchain : IBlockchain<BlockType, Record>
     public void AddBlock(BlockType block)
     {
         _mutex.WaitOne();
-        if (!validator.validate(block)) // jeżeli blok nie ma poprawnie zdefiniowanego hasha chcemy go odrzucić
+        var err = validator.validate(block);
+        if (err != null) // jeżeli blok nie ma poprawnie zdefiniowanego hasha chcemy go odrzucić
         {
+            Console.WriteLine($"{err.Message}");
             _mutex.ReleaseMutex();
             return;
         }

@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using blockProject.randomSrc;
 
 namespace blockProject.blockchain;
 
@@ -7,7 +8,7 @@ public interface IValidator
 {
     public string calcDataHash(BlockType block);
     public string calcHash(BlockType block);
-    public bool validate(BlockType block);
+    public Error? validate(BlockType block);
 }
 
 public class Validator : IValidator
@@ -56,8 +57,28 @@ public class Validator : IValidator
             }
     }
 
-    public bool validate(BlockType block)
+// czy dane podane w bloku są poprawne, np czy użytkownik ma odpowienią ilość waluty itd 
+    public Error? isDataValid(BlockType blk)
     {
-        return true;
+        return null;
+    }
+
+    public Error? validate(BlockType block)
+    {
+        // sprawdzanie hashy
+        if (calcDataHash(block) != block.DataHash || calcHash(block) != block.Hash) return new Error("bad hashesh");
+        // sprawdzanie rekordu danych
+        if (block.Records.Count > 3) return new Error("to many records");
+        // sprawdzenie czy taki poprzednik jest w naszym blockchainie
+        var blockchain = Blockchain.GetInstance().GetChain();
+        if (blockchain.FindIndex(blk => blk.Hash == block.PreviousHash) == -1) return new Error("previous block doesnt exist in blockchain");
+        // czy ten blok już nie znajduje się w blockchainie
+        if (blockchain.FindIndex(blk => blk.Hash == block.Hash) != -1) return new Error("block already in blockchain");
+        // sprawdzenie czy rekordy które chcemy dodać nie znajdują się już w blockchainine
+        // todo: na razie wyłączone, czy to jest wgl potrzebne???
+        var dataValidation = isDataValid(block);
+        if (dataValidation != null) return dataValidation;
+        return null;
+        // return (from bl in blockchain from rec in bl.Records from newRecords in block.Records select newRecords).All(newRecords => block.Records.FindIndex(rec => rec.id == newRecords.id) == -1) ? new Error("record already in blockchain") : null;
     }
 }
