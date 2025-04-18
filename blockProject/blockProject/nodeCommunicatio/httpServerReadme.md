@@ -40,6 +40,7 @@ w razie błędu zwraca `{success = false, result = "<errorMessage>"}`
 
 ### addRecord
 method: POST\
+`http://<ip>:<port>/api/addRecord`\
 dodawanie rekordu danych do blockchainu\
 dane przekazywane poprzez body\
 sygnatura JSON = `{ Key : <keyvalue>, Value: <valueValue/*XD*/>}`\
