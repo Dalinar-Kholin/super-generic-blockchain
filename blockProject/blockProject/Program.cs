@@ -36,14 +36,14 @@ internal class Program
 
         api.MapGet("/addNewNode", httpMaster.AddNewNode);
 
-        api.MapGet("/SendBlock", httpMaster.SendBlock);
+        api.MapGet("/SendBlock", httpMaster.SendBlock); // to jest testowe
 
-        api.MapGet("/getFriendIp", httpMaster.GetFriendIp);
+        api.MapGet("/getFriendIp", httpMaster.GetFriendIp);// to jest testowe
 
         //sprawdzenie czy komunikacja działa
-        api.MapGet("/sendMessage", httpMaster.SendMessage);
+        api.MapGet("/sendMessage", httpMaster.SendMessage); // to jest testowe
         
-        api.MapGet("/getNode", (HttpContext httpContext) => "essa");
+        api.MapGet("/getNode", (HttpContext httpContext) => "essa"); // to jest testowe
         
         api.MapGet("/getStats", httpMaster.GetStat);
         
