@@ -5,11 +5,6 @@ using Record = blockProject.blockchain.Record;
 namespace TestProject.TestBlockchain;
 
 
-
-
-
-
-
 [Collection("SequentialTests")]
 public class testHashing
 {

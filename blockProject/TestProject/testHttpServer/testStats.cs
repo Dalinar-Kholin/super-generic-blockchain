@@ -75,18 +75,20 @@ public class testStats
 
                 var deserialized = JsonConvert.DeserializeAnonymousType(body, new
                 {
+                    success = true, 
+                    result = new {
                     blockCount = 0,
                     recordCount = 0,
                     workingTime = 0,
                     friendNodeCount = 0,
-                    friendNode = new string[]{}
+                    friendNode = new string[]{}}
                 });
                 
                 Assert.NotNull(deserialized);
-                Assert.Equal(5, deserialized.blockCount);
-                Assert.Equal(6, deserialized.recordCount);
-                Assert.True(deserialized.friendNode.Length == 1);
-                Assert.Equal(new IPEndPoint(IPAddress.Parse(node2Ip), node2Port).ToString(), deserialized.friendNode[0]);
+                Assert.Equal(5, deserialized.result.blockCount);
+                Assert.Equal(6, deserialized.result.recordCount);
+                Assert.True(deserialized.result.friendNode.Length == 1);
+                Assert.Equal(new IPEndPoint(IPAddress.Parse(node2Ip), node2Port).ToString(), deserialized.result.friendNode[0]);
                 
             }
             catch (Exception e)

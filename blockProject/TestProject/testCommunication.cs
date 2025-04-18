@@ -106,11 +106,12 @@ public class testCommunication
 
                 var deserialized = JsonConvert.DeserializeAnonymousType(body, new
                 {
+                    success = true,
                     result = new List<string>()
                 });
 
-                if (deserialized == null) throw new Exception("Błąd deserializacji JSON");
-
+                Assert.NotNull(deserialized);
+                Assert.True(deserialized.success);
                 // Konwertujemy stringi na IPEndPoint
                 var result = deserialized.result.Select(ipString =>
                 {
@@ -125,9 +126,9 @@ public class testCommunication
                 Assert.Equal(new IPEndPoint(IPAddress.Parse(node2Ip), node2Port), result[0]);
                 response = await client.GetAsync($"http://127.0.0.1:{node1Port + 1}/api/sendMessage");
                 body = await response.Content.ReadAsStringAsync();
-                var newTemplate = new { success = true, message = "sucess" };
+                var newTemplate = new { success = true, result = "sucess" };
                 var newResult = JsonConvert.DeserializeAnonymousType(body, newTemplate);
-                Assert.Equal("success", newResult?.message);
+                Assert.Equal("success", newResult?.result);
                 Assert.Equal(200, (int)response.StatusCode);
             }
             catch (Exception e)
