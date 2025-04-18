@@ -12,9 +12,9 @@ git clone https://github.com/Dalinar-Kholin/super-generic-blockchain
 
 cd blockProject/TestProject
 
-dotnet run -- \<port na którym ma działać server http węzła>
+dotnet run -- \<port na którym ma działać server tcp węzła>
 
-cała interakcja z blockchainem odbywa się poprzez server http na localhost:port podanym w argv, server tcp będzie działać na porcie http+1
+cała interakcja z blockchainem odbywa się poprzez server http na localhost:port podanym w argv, server http będzie działać na porcie tcp+1
 
 dodanie pierwszego węzła odbywa się przez zapytanie http o sygnaturze
 
