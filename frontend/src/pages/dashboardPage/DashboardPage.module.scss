@@ -1,0 +1,54 @@
+.container {
+    padding: 40px;
+    max-width: 1000px;
+    margin: 0 auto;
+    color: #f0f0f0;
+  }
+  
+  .title {
+    font-size: 2rem;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+  
+  .statsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+  }
+  
+  .card {
+    background-color: #1a1a1a;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+    transition: background 0.3s;
+  
+    h2 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      color: #a0c4ff;
+    }
+  
+    p {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+  
+    ul {
+      padding-left: 16px;
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+  
+    li {
+      margin-bottom: 4px;
+    }
+  }
+  
+  .error {
+    color: #ff6464;
+    text-align: center;
+    margin-top: 16px;
+  }
+  
