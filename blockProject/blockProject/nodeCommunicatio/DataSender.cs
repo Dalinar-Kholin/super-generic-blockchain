@@ -30,12 +30,14 @@ public class DataSender
 
     // do lekkiej zmiany
     // wyslanie bloku do sasiadów
-    public async Task<Error?> SendBlock(BlockType block)
+    public async Task<Error?> SendBlock(BlockType block, IPEndPoint? exclude = null)
     {
         Console.WriteLine("wysyłamy blok");
         foreach (var ip in IPs) // przy metodzie plotki przesyłamy do losowych sąsiadów w liczbie x
         {
-            var requestFrame =
+			if (exclude != null && ip.Equals(exclude)) continue; // nie wysyłamy do nadawcy
+
+			var requestFrame =
                 new Frame(Requests.ADD_BLOCK, JToken.FromObject(block));
 
             Console.WriteLine($"Próba wysłania danych: {requestFrame} do {ip.Address}");
@@ -55,8 +57,8 @@ public class DataSender
 
                 if (json is { Request: Requests.ADD_BLOCK })
                 {
-                    return null;
-                }
+					continue; // kontynuujemy pętlę 
+				}
 
                 return new Error("Invalid response: " + result);
             }
@@ -67,13 +69,34 @@ public class DataSender
         }
         return null;
     }
-    
-    public async Task<Error?> SendRecord(Record record)
+
+    public async Task<Error?> SendRecord(Record record, IPEndPoint? exclude = null)
     {
-        await Task.Delay(100);
+        var frame = new Frame(Requests.ADD_RECORD, JToken.FromObject(record));
+
+        foreach (var ip in IPs)
+        {
+            if (exclude != null && ip.Equals(exclude)) continue;
+
+            using TcpClient client = new();
+            await client.ConnectAsync(ip);
+            await using var stream = client.GetStream();
+            try
+            {
+                string data = JsonConvert.SerializeObject(frame);
+                var bytes = Encoding.UTF8.GetBytes(data);
+                await stream.WriteAsync(bytes);
+            }
+            catch (Exception e)
+            {
+                return new Error($"Błąd podczas wysyłania rekordu: {e}");
+            }
+        }
+
         return null;
     }
-    
+
+
 
     // pozyskanie blockchaina od innych wezlow
     public async Task<Error?> ReceiveBlockchain()

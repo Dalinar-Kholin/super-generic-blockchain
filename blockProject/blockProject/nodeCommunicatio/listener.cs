@@ -55,14 +55,32 @@ public class Listener
                             await stream.WriteAsync(responseBytes);
                             // Console.WriteLine($"Wysłano blockchain {data}");
                             break;
-                        case Requests.ADD_BLOCK:
+
+						case Requests.ADD_RECORD:
+							Console.WriteLine($"Otrzymano rekord: {receivedJson.data}");
+							var record = receivedJson.data.ToObject<Record>();
+							if (record != null)
+							{
+								var addedBlock = Blockchain.GetInstance().AddRecord(record);
+								if (addedBlock != null)
+								{
+									_blockchainDataHandler.writeBlockc(addedBlock);
+								}
+
+								// propagacja dalej
+								var remoteEndpoint = (IPEndPoint)client.Client.RemoteEndPoint!;
+								await _sender.SendRecord(record, remoteEndpoint);
+							}
+							break;
+
+						case Requests.ADD_BLOCK:
                             Console.WriteLine($"Otrzymano blok: {receivedJson.data}");
                             BlockType block = receivedJson.data.ToObject<BlockType>()!;
 
-                            // jakaś walidacja bloku + inne akcje gdyby blok był niepoprawny
-                            // TODO: implementacja tej metody
-                            // dodanie bloku do blockchaina
-                            Blockchain.GetInstance().AddBlock(block);
+							// jakaś walidacja bloku + inne akcje gdyby blok był niepoprawny
+							// TODO: implementacja tej metody
+							// dodanie bloku do blockchaina
+							Blockchain.GetInstance().AddBlock(block);
                                 //AddToBlockchain(block); // do zaimplementowania
                             _blockchainDataHandler.writeBlockc(block); // zapisz blockchain do pliku
                             // wysłanie potwierdzenia otrzymania bloku
@@ -71,18 +89,19 @@ public class Listener
                             Console.WriteLine($"Wysłano potwierdzenie otrzymania bloku: {jsonResponse}");
                             await stream.WriteAsync(Encoding.UTF8.GetBytes(jsonResponse));
 
-                            // propagacja bloku do innych węzłów
-                            // TODO: implementacja algorytmu plotki
-                            // Master.SendFurther(block); // do zaimplementowania
-                            var ips = _sender.GetIps();
-                            foreach (var ip in ips)
-                            {
-                                var error = _sender.SendBlock(block).Result;
-                                if (error != null)
-                                {
-                                    Console.WriteLine($"Error sending block to {ip}: {error.Message}");
-                                }
-                            }
+							// propagacja bloku do innych węzłów
+							// TODO: implementacja algorytmu plotki
+							// Master.SendFurther(block); // do zaimplementowania
+							_ = _sender.SendBlock(block);
+							//var ips = _sender.GetIps();
+       //                     foreach (var ip in ips)
+       //                     {
+       //                         var error = _sender.SendBlock(block).Result;
+       //                         if (error != null)
+       //                         {
+       //                             Console.WriteLine($"Error sending block to {ip}: {error.Message}");
+       //                         }
+       //                     }
 
                             break;
                         case Requests.CONNECTION_PING:

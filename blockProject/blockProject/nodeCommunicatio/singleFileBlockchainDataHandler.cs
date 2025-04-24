@@ -66,7 +66,8 @@ public class singleFileBlockchainDataHandler : IblockchainDataHandler
     public (List<BlockType>, Error?) readBlockchain()
     {
         mut.WaitOne();
-        if (!File.Exists(_filePath))
+		Console.WriteLine($"path {_filePath}");
+		if (!File.Exists(_filePath))
         {
             mut.ReleaseMutex();
             return (new(), new Error($"there is no selected file "));

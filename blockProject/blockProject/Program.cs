@@ -17,7 +17,11 @@ internal class Program
 
         // inicjalizacja blockchainu
         var dh = singleFileBlockchainDataHandler.GetInstance();
-        dh._filePath = "data.json";
+        //dh._filePath = "D:\\nokia\\blockProject\\blockProject\\data.json";
+        //if (!File.Exists(dh._filePath))
+        //{
+        //    Console.WriteLine($"fooo");
+        //}
         var (storedChain, error) = dh.readBlockchain();
         if (error != null)
         {

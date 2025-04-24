@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "blockProject": {
+      "commandName": "Project",
+      "commandLineArgs": "4000"
+    }
+  }
+}
