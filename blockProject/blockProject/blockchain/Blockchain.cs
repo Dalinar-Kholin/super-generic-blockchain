@@ -1,23 +1,22 @@
-global using BlockType = blockProject.blockchain.Block; // alias na typ aktualnie używanego bloku
-using System.Text.Json;
 using blockProject.nodeCommunicatio;
 using Newtonsoft.Json;
 
 namespace blockProject.blockchain;
 
-public class Blockchain : IBlockchain<BlockType, Record>
+public class Blockchain : IBlockchain<BlockType, messageRecord>
 {
     private static Blockchain? _instance;
-    
-    private readonly Mutex _mutex = new();
-    
-    private readonly IValidator validator = new Validator();
-    private List<BlockType> chain = new ();
     private readonly IblockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
-    
+
+    private readonly Mutex _mutex = new();
+
+    private readonly IValidator validator = new Validator();
+    private List<BlockType> chain = new();
+
     // najowszy blok gdzie będziemy przekazywać dane rekordu
     // a następnie przy spełnieniu warunków jest commitowany do blockchainu
-    public BlockType newestBlock = new BlockType(); 
+    public BlockType newestBlock = new();
+
     private Blockchain()
     {
         // taka głupotka, ponieważ zakłada że mamy już stworzony plik z blockchainem, utrudnia testowanie 
@@ -29,11 +28,11 @@ public class Blockchain : IBlockchain<BlockType, Record>
 
         this.chain = storedChain;*/
     }
-    
+
     // zwraca nam ilość elementów w recordzie
-    public BlockType? AddRecord(Record Record)
+    public BlockType? AddRecord(messageRecord Record)
     {
-        var rec = newestBlock.Records; 
+        var rec = newestBlock.Records;
         rec.Add(Record);
 
         if (rec.Count >= 3)
@@ -44,6 +43,7 @@ public class Blockchain : IBlockchain<BlockType, Record>
             newestBlock = new BlockType();
             return newBlock;
         }
+
         return null;
     }
 
@@ -53,7 +53,7 @@ public class Blockchain : IBlockchain<BlockType, Record>
 
         block.Hash = validator.calcHash(block);
         block.DataHash = validator.calcDataHash(block);
-        
+
         chain.Add(block);
         _mutex.ReleaseMutex();
     }
@@ -87,18 +87,18 @@ public class Blockchain : IBlockchain<BlockType, Record>
     {
         return JsonConvert.SerializeObject(chain);
     }
-    
+
     public List<BlockType> GetBlockchain()
     {
         return chain;
     }
-    
+
 
     public static Blockchain GetInstance()
     {
         return _instance ??= new Blockchain();
     }
-    
+
     public static Blockchain GetTestInstance()
     {
         return new Blockchain();

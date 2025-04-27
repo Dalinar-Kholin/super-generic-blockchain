@@ -1,9 +1,9 @@
-﻿using System.Text.Json.Serialization;
+﻿namespace blockProject.blockchain;
 
-namespace blockProject.blockchain;
-
-public class Record
+/*public class Record
 {
+    public Guid id;
+
     public Record(string key, string value)
     {
         id = Guid.NewGuid();
@@ -11,13 +11,12 @@ public class Record
         Value = value;
     }
 
-    public Guid id;
     public string Key { get; set; }
-    
+
     public string Value { get; set; }
 
     public override string ToString()
     {
         return $"{Key}:{Value}, guid = {id}";
     }
-}
+}*/

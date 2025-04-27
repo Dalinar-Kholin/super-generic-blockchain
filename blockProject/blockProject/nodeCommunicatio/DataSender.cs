@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection.Metadata.Ecma335;
+using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using blockProject.blockchain;
 using blockProject.nodeCommunicatio.communicationFrames;
@@ -14,8 +14,8 @@ namespace blockProject.nodeCommunicatio;
 // klasa do wysyłania danych do innych węzłów
 public class DataSender
 {
-    private readonly List<IPEndPoint> IPs = [];
     private readonly IblockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
+    private readonly List<IPEndPoint> IPs = [];
 
     public List<string> GetIps()
     {
@@ -24,56 +24,17 @@ public class DataSender
 
     public void AddIP(IPEndPoint ip)
     {
-        if (IPs.Aggregate(false, (acc, x) => acc ? acc : x.ToString() == ip.ToString())) return; // sprawdzenie czy n ie mamy już takiego IP na liście
+        if (IPs.Aggregate(false, (acc, x) => acc ? acc : x.ToString() == ip.ToString()))
+            return; // sprawdzenie czy n ie mamy już takiego IP na liście
         IPs.Add(ip);
     }
 
-    // do lekkiej zmiany
-    // wyslanie bloku do sasiadów
-    public async Task<Error?> SendBlock(BlockType block, IPEndPoint? exclude = null)
+    // poprzez generyczność zastąpiliśmy sendRecord i sendBlock
+    public async Task<Error?> SendData<T>(T dataToSend, IPEndPoint? exclude = null)
     {
-        Console.WriteLine("wysyłamy blok");
-        foreach (var ip in IPs) // przy metodzie plotki przesyłamy do losowych sąsiadów w liczbie x
-        {
-			if (exclude != null && ip.Equals(exclude)) continue; // nie wysyłamy do nadawcy
-
-			var requestFrame =
-                new Frame(Requests.ADD_BLOCK, JToken.FromObject(block));
-
-            Console.WriteLine($"Próba wysłania danych: {requestFrame} do {ip.Address}");
-            using TcpClient client = new();
-            await client.ConnectAsync(ip);
-            await using var stream = client.GetStream();
-            try
-            {
-                string data = JsonConvert.SerializeObject(requestFrame);
-                var bytes = Encoding.UTF8.GetBytes(data);
-                await stream.WriteAsync(bytes);
-
-                var buffer = new byte[1_024];
-                var readed = await stream.ReadAsync(buffer);
-                var result = Encoding.UTF8.GetString(buffer, 0, readed);
-                var json = JsonConvert.DeserializeObject<Frame>(result);
-
-                if (json is { Request: Requests.ADD_BLOCK })
-                {
-					continue; // kontynuujemy pętlę 
-				}
-
-                return new Error("Invalid response: " + result);
-            }
-            catch (Exception e)
-            {
-                return new Error($"Nie udało się wysłać danych {e}");
-            }
-        }
-        return null;
-    }
-
-    public async Task<Error?> SendRecord(Record record, IPEndPoint? exclude = null)
-    {
-        var frame = new Frame(Requests.ADD_RECORD, JToken.FromObject(record));
-
+        if (dataToSend == null) return new Error("empty data");
+        var type = typeof(T) == typeof(recordType) ? Requests.ADD_RECORD : Requests.ADD_BLOCK;
+        var frame = new Frame(type, JToken.FromObject(dataToSend));
         foreach (var ip in IPs)
         {
             if (exclude != null && ip.Equals(exclude)) continue;
@@ -83,9 +44,18 @@ public class DataSender
             await using var stream = client.GetStream();
             try
             {
-                string data = JsonConvert.SerializeObject(frame);
+                var data = JsonConvert.SerializeObject(frame);
                 var bytes = Encoding.UTF8.GetBytes(data);
                 await stream.WriteAsync(bytes);
+                
+                var buffer = new byte[1_024];
+                var readed = await stream.ReadAsync(buffer);
+                var result = Encoding.UTF8.GetString(buffer, 0, readed);
+                var json = JsonConvert.DeserializeObject<Frame>(result);
+
+                if (json != null && json.Request == type) continue; // kontynuujemy pętlę 
+
+                return new Error("Invalid response: " + result);
             }
             catch (Exception e)
             {
@@ -94,15 +64,14 @@ public class DataSender
         }
 
         return null;
+
     }
-
-
-
+    
     // pozyskanie blockchaina od innych wezlow
     public async Task<Error?> ReceiveBlockchain()
     {
         var requestFrame =
-            JsonSerializer.Serialize(new Frame(Requests.GET_BLOCKCHAIN, JToken.FromObject((List<BlockType>)[])));
+            JsonSerializer.Serialize(new Frame(Requests.GET_BLOCKCHAIN, JToken.FromObject((List<BlockType>) [])));
 
         Console.WriteLine($"Próba wysłania danych: {requestFrame} do {IPs.Count} węzłów");
 
@@ -125,7 +94,7 @@ public class DataSender
                 {
                     var blockchin = json.data.ToObject<List<BlockType>>();
                     // TODO: porównanie ze swoim blockchainem i załadowanie do pamięci
-                    var block = (blockchin ?? new List<BlockType>());
+                    var block = blockchin ?? new List<BlockType>();
                     Blockchain.GetInstance().SetChain(block);
                     _blockchainDataHandler.writeBlockchain(block);
                     // Zapisz blockchain
@@ -143,7 +112,7 @@ public class DataSender
         return null;
     }
 
-    public async Task<Error?> SendData<T, E>(IBlockchain<T, E> blockchain)
+    public async Task<Error?> pingNode()
     {
         foreach (var ip in IPs)
         {

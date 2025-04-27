@@ -1,3 +1,4 @@
+global using BlockType = blockProject.blockchain.Block; // alias na typ aktualnie używanego bloku
 namespace blockProject.blockchain;
 
 // jakie metody powinnien udostępniać nasz blockchain
@@ -11,5 +12,4 @@ public interface IBlockchain<T, Z>
 
     List<BlockType> GetChain();
     void SetChain(List<BlockType> blockchain);
-
 }

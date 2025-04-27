@@ -11,26 +11,27 @@ using Xunit.Abstractions;
 namespace TestProject;
 
 [CollectionDefinition("SequentialTests", DisableParallelization = true)]
-public class SequentialTestsCollection { }
-
+public class SequentialTestsCollection
+{
+}
 
 [Collection("SequentialTests")]
-public class TestHelper()
+public class TestHelper
 {
     public static WebApplication MakeApi()
     {
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.SuppressStatusMessages(true);
-        builder.Logging.ClearProviders();// uciszenie diagnostyki servera http
+        builder.Logging.ClearProviders(); // uciszenie diagnostyki servera http
         var app = builder.Build();
         var api = app.MapGroup("/api");
 
-        DataSender sender = new DataSender();
+        var sender = new DataSender();
         var httpMaster = new HttpMaster(sender);
 
         api.MapGet("/addNewNode", httpMaster.AddNewNode);
 
-        api.MapGet("/sendMessage", httpMaster.SendMessage);
+        api.MapGet("/sendMessage", httpMaster.ping);
         api.MapGet("/ping", (HttpContext context) => "alive");
         api.MapGet("/getFriendIps", httpMaster.GetFriendIp);
         api.MapGet("/getStats", httpMaster.GetStat);
@@ -47,26 +48,29 @@ public class testCommunication
         _testOutputHelper = testOutputHelper;
     }
 
-    
+
     [Fact]
     public async Task testBasicCommunicationWithData()
     {
         var dh = singleFileBlockchainDataHandler.GetTestInstance();
         dh._filePath = "../../../data.json";
         var (storedChain, error) = dh.readBlockchain();
-        if (error != null) { // jeżeli nie udało się załadować blockchainu spadamy z rowerka
+        if (error != null)
+        {
+            // jeżeli nie udało się załadować blockchainu spadamy z rowerka
             Console.WriteLine($"nie udało się załadować blockchainu z powodu {error.Message}");
             Environment.Exit(1);
         }
+
         Blockchain.GetInstance().SetChain(storedChain);
-        
+
         const int node1Port = 9999;
         const int node2Port = 8888;
         const string node2Ip = "127.0.0.1";
 
-        DataSender sender = new DataSender();
-        new Thread(new Listener( node1Port).Start).Start();
-        new Thread(new Listener( node2Port).Start).Start();
+        var sender = new DataSender();
+        new Thread(new Listener(node1Port).Start).Start();
+        new Thread(new Listener(node2Port).Start).Start();
         var node1 = TestHelper.MakeApi();
         var node2 = TestHelper.MakeApi();
 
@@ -100,7 +104,8 @@ public class testCommunication
                     await client.GetAsync(
                         $"http://127.0.0.1:{node1Port + 1}/api/addNewNode?port={node2Port}&ip={node2Ip}");
                 Assert.Equal(200, (int)response.StatusCode);
-                Assert.True(Blockchain.GetInstance().GetBlockchain().Count > 0); // sprawdzamy czy realnie dostaliśmy jakiś blockchain
+                Assert.True(Blockchain.GetInstance().GetBlockchain().Count >
+                            0); // sprawdzamy czy realnie dostaliśmy jakiś blockchain
                 response = await client.GetAsync($"http://127.0.0.1:{node1Port + 1}/api/getFriendIps");
                 var body = await response.Content.ReadAsStringAsync();
 
@@ -136,6 +141,7 @@ public class testCommunication
                 Assert.Fail($"cant handle communication {e}\n");
             }
         }
+
         Blockchain.Reset();
     }
 }

@@ -13,6 +13,8 @@ public interface IValidator
 
 public class Validator : IValidator
 {
+    
+    // todo: zmienić na drzewa merkele
     public string calcDataHash(BlockType block)
     {
         var data = new StringBuilder();
@@ -57,12 +59,6 @@ public class Validator : IValidator
             }
     }
 
-// czy dane podane w bloku są poprawne, np czy użytkownik ma odpowienią ilość waluty itd 
-    public Error? isDataValid(BlockType blk)
-    {
-        return null;
-    }
-
     public Error? validate(BlockType block)
     {
         // sprawdzanie hashy
@@ -71,7 +67,8 @@ public class Validator : IValidator
         if (block.Records.Count > 3) return new Error("to many records");
         // sprawdzenie czy taki poprzednik jest w naszym blockchainie
         var blockchain = Blockchain.GetInstance().GetChain();
-        if (blockchain.FindIndex(blk => blk.Hash == block.PreviousHash) == -1) return new Error("previous block doesnt exist in blockchain");
+        if (blockchain.FindIndex(blk => blk.Hash == block.PreviousHash) == -1)
+            return new Error("previous block doesnt exist in blockchain");
         // czy ten blok już nie znajduje się w blockchainie
         if (blockchain.FindIndex(blk => blk.Hash == block.Hash) != -1) return new Error("block already in blockchain");
         // sprawdzenie czy rekordy które chcemy dodać nie znajdują się już w blockchainine
@@ -80,5 +77,11 @@ public class Validator : IValidator
         if (dataValidation != null) return dataValidation;
         return null;
         // return (from bl in blockchain from rec in bl.Records from newRecords in block.Records select newRecords).All(newRecords => block.Records.FindIndex(rec => rec.id == newRecords.id) == -1) ? new Error("record already in blockchain") : null;
+    }
+
+// czy dane podane w bloku są poprawne, np czy użytkownik ma odpowienią ilość waluty itd 
+    public Error? isDataValid(BlockType blk)
+    {
+        return null;
     }
 }
