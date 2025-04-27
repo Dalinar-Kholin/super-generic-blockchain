@@ -30,9 +30,9 @@ public class Listener
             {
                 await using var stream = client.GetStream();
                 var endpoint = client.Client.RemoteEndPoint as IPEndPoint;
-                    
-                    
-                    
+
+
+
                 while (true)
                 {
                     // jakoś tutaj powinna odbyć się obsługa komunikacji z klientem, odwołujemy się do Mastera
@@ -65,14 +65,22 @@ public class Listener
 
                             Console.WriteLine($"Otrzymano rekord: {receivedJson.data}");
                             var record = receivedJson.data.ToObject<messageRecord>();
+
                             // todo: tutaj powinna odbyć się walidacja rekordu, czy jest poprawny, oraz czy już nie występuje w naszej sieci
+
                             if (record != null)
                             {
                                 var addedBlock = Blockchain.GetInstance().AddRecord(record);
-                                if (addedBlock != null) _blockchainDataHandler.writeBlockc(addedBlock);
-
-                                
-                                await _sender.SendData(record, endpoint);
+                                if (addedBlock != null)
+                                {
+                                    Blockchain.GetInstance().AddBlock(addedBlock);
+                                    _blockchainDataHandler.writeBlockc(addedBlock);
+                                    await _sender.SendData(addedBlock, endpoint);
+                                }
+                                else
+                                {
+                                    await _sender.SendData(record, endpoint);
+                                }
                             }
 
                             break;
@@ -82,7 +90,7 @@ public class Listener
                             var block = receivedJson.data.ToObject<BlockType>()!;
 
                             // todo: tutaj powinna odbyć się walidacja rekordu, czy jest poprawny, oraz czy już nie występuje w naszej sieci
-                            
+
                             // jakaś walidacja bloku + inne akcje gdyby blok był niepoprawny
                             // TODO: implementacja tej metody
                             // dodanie bloku do blockchaina
@@ -97,7 +105,7 @@ public class Listener
 
                             // propagacja bloku do innych węzłów
                             _ = _sender.SendData(block, endpoint);
-                            
+
                             break;
                         case Requests.CONNECTION_PING:
                             var result = new Frame(Requests.CONNECTION_PING, JToken.FromObject(""));

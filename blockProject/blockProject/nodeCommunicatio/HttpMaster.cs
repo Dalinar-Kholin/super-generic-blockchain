@@ -12,12 +12,12 @@ public class LoginMaster
 
     public async Task addUser()
     {
-        
-    } 
+
+    }
     public async Task login()
     {
-        
-    } 
+
+    }
 }
 
 
@@ -117,23 +117,23 @@ public class HttpMaster
         await context.Response.WriteAsJsonAsync(result);
     }
 
-    
-    
-    
-    
+
+
+
+
     // zapytanie curl -X POST http://<ip>:<port>/api/addRecord -d '{Key: "data", Value: "data"}'
     // powinno zwrócić JSON {"result" : "success"}
     // TODO: do przetestowania automatycznego
     public record recivedRecordData(string to, string message, bool shouldBeEncrypted);
-    
+
     public async Task AddRecord(HttpContext context)
     {
         context.Response.ContentType = "application/json";
-     
+
         // jakoś z requesta pobieram klucz publiczny i prywatny
         var privateKey = "";
         var publicKey = "";
-        
+
         IBlockchain<BlockType, messageRecord> block = Blockchain.GetInstance();
         using var reader = new StreamReader(context.Request.Body);
         var body = await reader.ReadToEndAsync();
@@ -155,7 +155,7 @@ public class HttpMaster
             rec = block.AddRecord(new messageRecord(publicKey, record.to, ));
         }
         */
-        
+
         await sender.SendData(record);
         //if (rec != null) await sender.SendData(rec);
 
