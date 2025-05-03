@@ -39,7 +39,7 @@ public class testValidator
     {
         var blk = new Block(Blockchain.GetInstance().GetChain()[1].PreviousHash);
         for (var i = 0; i < Random.Shared.Next() % 3; i++)
-            blk.AddRecord(testHelper.getRandomRecord());
+            blk.AddRecord(testHelper.getRandomDummyRecord());
 
 
         blk.DataHash = _validator.calcDataHash(blk);
@@ -51,7 +51,7 @@ public class testValidator
     {
         var blk = new Block(Blockchain.GetInstance().GetChain()[0].PreviousHash);
         for (var i = 0; i < Random.Shared.Next() % 3; i++)
-            blk.AddRecord(testHelper.getRandomRecord());
+            blk.AddRecord(testHelper.getRandomDummyRecord());
 
         blk.DataHash = _validator.calcDataHash(blk);
         blk.Hash = "skratada";
@@ -62,7 +62,7 @@ public class testValidator
     {
         var blk = new Block(Blockchain.GetInstance().GetChain()[0].PreviousHash);
         for (var i = 0; i < Random.Shared.Next() % 3; i++)
-            blk.AddRecord(testHelper.getRandomRecord());
+            blk.AddRecord(testHelper.getRandomDummyRecord());
 
         blk.DataHash = _validator.calcDataHash(blk);
         blk.Hash = "frlateda";
@@ -73,7 +73,7 @@ public class testValidator
     {
         var blk = new Block(Blockchain.GetInstance().GetChain()[0].PreviousHash);
         for (var i = 0; i < Random.Shared.Next() % 3 + 4; i++)
-            blk.AddRecord(testHelper.getRandomRecord());
+            blk.AddRecord(testHelper.getRandomDummyRecord());
 
         blk.DataHash = _validator.calcDataHash(blk);
         blk.Hash = _validator.calcHash(blk);

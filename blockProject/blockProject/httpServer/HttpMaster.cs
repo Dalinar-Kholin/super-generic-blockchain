@@ -143,8 +143,13 @@ public class HttpMaster
             {
                 block.Records.Aggregate(new List<simpleMessage>(), (_, r) =>
                 {
-                    
-                    if (r.to == Convert.ToBase64String(res.keys.PublicKey)) accumulate.Add(new simpleMessage(r.from, r.to, Encoding.ASCII.GetString(r.message)));
+                    if (r.to == Convert.ToBase64String(res.keys.PublicKey))
+                    {
+                        // todo: odszyfrowanie wiadomości
+                        
+                        
+                        accumulate.Add(new simpleMessage(r.from, r.to, Encoding.ASCII.GetString(r.message)));
+                    }
                     return null!;
                 });
                 return accumulate;
@@ -255,17 +260,10 @@ public class HttpMaster
             return;
         }
 
+        block.AddRecord(new recordType(record.to, Encoding.ASCII.GetBytes(record.message), res.keys, record.shouldBeEncrypted));
+        
         Console.WriteLine($"wartość rekordu{record}");
-        /*BlockType rec;
-        if (record.shouldBeEncrypted) {
-            rec = block.AddRecord(new messageRecord(publicKey, record.to, ));
-        }
-        else
-        {
-            rec = block.AddRecord(new messageRecord(publicKey, record.to, ));
-        }
-        */
-
+        
         await sender.SendData(record);
         //if (rec != null) await sender.SendData(rec);
 

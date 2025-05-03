@@ -19,23 +19,23 @@ public class testDataHandler
     private List<Block> generateBlockchain()
     {
         var block = new Block("0x0");
-        block.AddRecord(testHelper.getRandomRecord());
-        block.AddRecord(testHelper.getRandomRecord());
+        block.AddRecord(testHelper.getRandomDummyRecord());
+        block.AddRecord(testHelper.getRandomDummyRecord());
 
         IBlockchain<Block, messageRecord> blockchain = Blockchain.GetInstance();
 
         blockchain.CreateBlock(block);
         var block1 = new Block(block.Hash);
-        block.AddRecord(testHelper.getRandomRecord());
+        block.AddRecord(testHelper.getRandomDummyRecord());
         blockchain.CreateBlock(block1);
         block1 = new Block(block1.Hash);
-        block1.AddRecord(testHelper.getRandomRecord());
+        block1.AddRecord(testHelper.getRandomDummyRecord());
         blockchain.CreateBlock(block1);
         block1 = new Block(block1.Hash);
-        block1.AddRecord(testHelper.getRandomRecord());
+        block1.AddRecord(testHelper.getRandomDummyRecord());
         blockchain.CreateBlock(block1);
         block1 = new Block(block1.Hash);
-        block1.AddRecord(testHelper.getRandomRecord());
+        block1.AddRecord(testHelper.getRandomDummyRecord());
         blockchain.CreateBlock(block1);
         return blockchain.GetChain();
     }

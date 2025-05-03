@@ -1,5 +1,7 @@
 global using recordType = blockProject.blockchain.messageRecord;
+using System.Security.Cryptography;
 using System.Text;
+using blockProject.httpServer;
 
 namespace TestProject;
 
@@ -15,9 +17,12 @@ public class testHelper
         return new string(wynik);
     }
 
-    public static recordType getRandomRecord()
+    public static recordType getRandomDummyRecord()
     {
-        return new recordType(getRandomString(5), getRandomString(5),
-            Encoding.ASCII.GetBytes(getRandomString(20)) , getRandomString(5), false);
+        using var receiver = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP521);
+        byte[] receiverPrivateKey = receiver.ExportECPrivateKey();
+        byte[] receiverPublicKey = receiver.ExportSubjectPublicKeyInfo();
+        
+        return new recordType(Convert.ToString(receiverPublicKey)!, Encoding.ASCII.GetBytes("pojebaneoasdghfjhasdfjhvasdiofbasldskgfgahdbfoiajds;flkahflu gyeahrljghaoiusdfh"), new Keys(receiverPrivateKey, receiverPublicKey), false);
     }
 }
