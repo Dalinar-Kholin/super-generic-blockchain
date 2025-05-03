@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace blockProject.nodeCommunicatio;
 
-public interface IblockchainDataHandler
+public interface IBlockchainDataHandler
 {
     Error? editBlock(string blockhash, BlockType block);
     Error? writeBlockchain(List<BlockType> blocks);
@@ -13,7 +13,7 @@ public interface IblockchainDataHandler
     Error? deleteBlock(string blockHash);
 }
 
-public class singleFileBlockchainDataHandler : IblockchainDataHandler
+public class singleFileBlockchainDataHandler : IBlockchainDataHandler
 {
     private static singleFileBlockchainDataHandler? _instance;
     public string _filePath = "data.json";

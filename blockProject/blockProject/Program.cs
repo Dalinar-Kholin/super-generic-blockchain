@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using blockProject.blockchain;
+using blockProject.httpServer;
 using blockProject.nodeCommunicatio;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -100,6 +101,7 @@ internal class Program
 
         // inicjalizacja blockchainu
         var dh = singleFileBlockchainDataHandler.GetInstance();
+        JsonKeyMaster.path = ".KeyFile";
         //dh._filePath = "D:\\nokia\\blockProject\\blockProject\\data.json";
         //if (!File.Exists(dh._filePath))
         //{
@@ -115,6 +117,9 @@ internal class Program
 
         Blockchain.GetInstance().SetChain(storedChain);
 
+        
+        
+        
         var sender = new DataSender();
         var httpMaster = new HttpMaster(sender);
 
@@ -136,6 +141,9 @@ internal class Program
 
         var app = builder.Build();
 
+        
+        
+        
         // DODANE: Aktywujemy middleware CORS — MUSI być przed MapGroup i Run
         app.UseCors("AllowFrontend");
         app.UseHttpsRedirection();
@@ -145,16 +153,46 @@ internal class Program
         app.MapFallbackToFile("index.html");
         
         // teraz grupujemy API
+        
         var api = app.MapGroup("/api");
+        var anon = app.MapGroup("/anon");
+        var auth = app.MapGroup("/auth");
+        var supervisor = app.MapGroup("/supervisor");
+        
+        api.AddEndpointFilter(async (context, next) =>
+        {
+            var cookie = context.HttpContext.Request.Cookies["uuid"];
+            if (cookie == null)
+            {
+                context.HttpContext.Response.StatusCode = 403;
+                return null;
+            };
+            var res = new JsonKeyMaster().getKeys(cookie);
+            if (res.err != null)
+            {
+                context.HttpContext.Response.StatusCode = 403;
+                return null;
+            }
+            return await next(context);
+        });
+        
+        supervisor.MapGet("/addNewNode", httpMaster.AddNewNode);
+        supervisor.MapGet("/getFriendIp", httpMaster.GetFriendIp); // to jest testowe
+        supervisor.MapGet("/getStats", httpMaster.GetStat);
 
-        api.MapGet("/addNewNode", httpMaster.AddNewNode);
-        api.MapGet("/SendBlock", httpMaster.SendBlock); // to jest testowe
-        api.MapGet("/getFriendIp", httpMaster.GetFriendIp); // to jest testowe
-        api.MapGet("/sendMessage", httpMaster.ping); // test komunikacji
-        api.MapGet("/getNode", (HttpContext httpContext) => "essa"); // test
-        api.MapGet("/getStats", httpMaster.GetStat);
+        //api.MapGet("/SendBlock", httpMaster.SendBlock); // to jest testowe
+        // api.MapGet("/sendMessage", httpMaster.ping); // test komunikacji
         api.MapPost("/addRecord", httpMaster.AddRecord);
+        api.MapPost("/getMessages", httpMaster.GetMessages);
+        //api.MapGet("/getNode", (HttpContext httpContext) => "essa"); // test
+        var loginMaster = new LoginMaster();
 
+        auth.MapPost("/login", loginMaster.login);
+        auth.MapPost("/register", loginMaster.addUser);
+
+        var anonServer = new anonServer();
+        anon.MapGet("/getMessages", anonServer.getMessages);
+        
         Console.WriteLine("starting server\n");
 
         app.Run($"http://127.0.0.1:{port + 1}/");

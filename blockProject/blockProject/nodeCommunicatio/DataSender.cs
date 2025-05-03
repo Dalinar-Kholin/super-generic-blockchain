@@ -14,7 +14,7 @@ namespace blockProject.nodeCommunicatio;
 // klasa do wysyłania danych do innych węzłów
 public class DataSender
 {
-    private readonly IblockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
+    private readonly IBlockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
     private readonly List<IPEndPoint> IPs = [];
 
     public List<string> GetIps()

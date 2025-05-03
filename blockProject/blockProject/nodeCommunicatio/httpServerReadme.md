@@ -51,3 +51,4 @@ dane przekazywane poprzez body\
 sygnatura JSON = `{ Key : <keyvalue>, Value: <valueValue/*XD*/>}`\
 w razie sukcesu zwraca `{success = true, result = ""}`
 w razie błędu zwraca `{success = false, result = "<errorMessage>"}`
+

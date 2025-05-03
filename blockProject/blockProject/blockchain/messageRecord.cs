@@ -35,3 +35,6 @@ public class messageRecord
         return $"{from} == {message} ==> {to}, guid = {id} {sign}";
     }
 }
+
+
+public record simpleMessage(string from,string to, string message);

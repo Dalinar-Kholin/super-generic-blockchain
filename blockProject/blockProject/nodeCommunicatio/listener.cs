@@ -10,7 +10,7 @@ namespace blockProject.nodeCommunicatio;
 
 public class Listener
 {
-    private readonly IblockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
+    private readonly IBlockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
     private readonly int _port;
     private readonly DataSender _sender = new();
 
@@ -60,7 +60,7 @@ public class Listener
                             await stream.WriteAsync(responseBytes);
                             // Console.WriteLine($"Wysłano blockchain {data}");
                             break;
-
+                        
                         case Requests.ADD_RECORD:
 
                             Console.WriteLine($"Otrzymano rekord: {receivedJson.data}");
@@ -84,7 +84,7 @@ public class Listener
                             }
 
                             break;
-
+                        
                         case Requests.ADD_BLOCK:
                             Console.WriteLine($"Otrzymano blok: {receivedJson.data}");
                             var block = receivedJson.data.ToObject<BlockType>()!;
@@ -107,6 +107,7 @@ public class Listener
                             _ = _sender.SendData(block, endpoint);
 
                             break;
+                        
                         case Requests.CONNECTION_PING:
                             var result = new Frame(Requests.CONNECTION_PING, JToken.FromObject(""));
                             data = JsonConvert.SerializeObject(result);

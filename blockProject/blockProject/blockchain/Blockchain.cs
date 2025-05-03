@@ -6,7 +6,7 @@ namespace blockProject.blockchain;
 public class Blockchain : IBlockchain<BlockType, messageRecord>
 {
     private static Blockchain? _instance;
-    private readonly IblockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
+    private readonly IBlockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
 
     private readonly Mutex _mutex = new();
 
