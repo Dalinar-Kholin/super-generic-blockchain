@@ -40,6 +40,7 @@ public class Blockchain : IBlockchain<BlockType, messageRecord>
             var newBlock = newestBlock;
             newBlock.Hash = validator.calcHash(newBlock);
             newBlock.DataHash = validator.calcDataHash(newBlock);
+            chain.Add(newestBlock);
             newestBlock = new BlockType();
             return newBlock;
         }

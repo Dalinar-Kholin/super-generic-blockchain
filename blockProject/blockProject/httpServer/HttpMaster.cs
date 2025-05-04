@@ -12,8 +12,8 @@ namespace blockProject.httpServer;
 
 public class LoginMaster
 {
-    private record registerData(string Username, string password, string privateKey, string publicKey);
-    private record loginData(string Username, string password);
+    private record registerData(string username, string password, string privateKey, string publicKey);
+    private record loginData(string username, string password);
     
     public async Task addUser(HttpContext context)
     {
@@ -34,7 +34,7 @@ public class LoginMaster
         }
         var keyMaster = new JsonKeyMaster();
         
-        var err = keyMaster.deepStore(new Keys(Convert.FromBase64String(data.privateKey), Convert.FromBase64String(data.publicKey)), data.Username, data.password);
+        var err = keyMaster.deepStore(new Keys(Convert.FromBase64String(data.privateKey), Convert.FromBase64String(data.publicKey)), data.username, data.password);
         if (err != null)
         {
             await context.Response.WriteAsJsonAsync(new
@@ -45,13 +45,14 @@ public class LoginMaster
             return;
         }
 
-        var res = keyMaster.loadKeys(data.Username, data.password);
+        var res = keyMaster.loadKeys(data.username, data.password);
+        context.Response.Cookies.Append("uuid", res.uuid);
         await context.Response.WriteAsJsonAsync(new
         {
             success = true,
-            result = data.Username
+            result = data.username
         });
-        context.Response.Cookies.Append("uuid", res.uuid);
+        
         
     }
     public async Task login(HttpContext context)
@@ -73,7 +74,7 @@ public class LoginMaster
         }
         var keyMaster = new JsonKeyMaster();
         
-        var res = keyMaster.loadKeys(data.Username, data.password);
+        var res = keyMaster.loadKeys(data.username, data.password);
         if (res.Item2 != null)
         {
             await context.Response.WriteAsJsonAsync(new
@@ -83,12 +84,12 @@ public class LoginMaster
             });
             return;
         }
+        context.Response.Cookies.Append("uuid", res.uuid);
         await context.Response.WriteAsJsonAsync(new
         {
             success = true,
-            result = data.Username
+            result = data.username
         });
-        context.Response.Cookies.Append("uuid", res.uuid);
     }
 }
 
@@ -138,6 +139,15 @@ public class HttpMaster
             return;
         };
         var res = new JsonKeyMaster().getKeys(cookie);
+        if (res.err != null)
+        {
+            await context.Response.WriteAsJsonAsync(new
+            {
+                success = false,
+                result = res.err
+            });
+            return;
+        }
         var messages = Blockchain.GetInstance().GetChain().Aggregate(
             new List<simpleMessage>(), (accumulate, block) =>
             {
@@ -148,7 +158,7 @@ public class HttpMaster
                         // todo: odszyfrowanie wiadomości
                         
                         
-                        accumulate.Add(new simpleMessage(r.from, r.to, Encoding.ASCII.GetString(r.message)));
+                        accumulate.Add(r.decrypt(res.keys));
                     }
                     return null!;
                 });
@@ -261,6 +271,7 @@ public class HttpMaster
         }
 
         block.AddRecord(new recordType(record.to, Encoding.ASCII.GetBytes(record.message), res.keys, record.shouldBeEncrypted));
+        singleFileBlockchainDataHandler.GetInstance().writeBlockchain(block.GetChain());
         
         Console.WriteLine($"wartość rekordu{record}");
         

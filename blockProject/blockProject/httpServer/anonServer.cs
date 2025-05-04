@@ -18,7 +18,7 @@ public class anonServer
             {
                 block.Records.Aggregate(new List<simpleMessage>(), (_, r) =>
                 {
-                    if (r.to == "0x0") accumulate.Add(new simpleMessage(r.from, r.to, Encoding.ASCII.GetString(r.message)));
+                    if (r.to == "0x0") accumulate.Add(r.decrypt(new Keys([], [])));
                     return null!;
                 });
                 return accumulate;

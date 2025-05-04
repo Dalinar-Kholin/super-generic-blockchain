@@ -81,7 +81,7 @@ public class messageRecord
     {
         if (!isEncoded)
         {
-            return new simpleMessage(from, to, Convert.ToString(message)!);
+            return new simpleMessage(from, to, Encoding.ASCII.GetString(message));
         }
         
         

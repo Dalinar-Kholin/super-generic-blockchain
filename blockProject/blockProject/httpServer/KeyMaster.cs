@@ -34,10 +34,10 @@ public class DatabaseRecord(byte[] privateKey, byte[] publicKey, string username
 public class JsonKeyMaster : IKeyMaster
 {
     public static string path = ""; // ".KeyFile"; // ścieżka do pliku z kluczami na razie JSON
-    private Mutex _mut = new();
+    private static Mutex _mut = new();
 
     // cahce naszych kluczy 
-    private Dictionary<string, Keys> hashMap = new();
+    private static Dictionary<string, Keys> hashMap = new();
     
     public (string uuid, Error?) loadKeys(string username, string password)
     {
@@ -48,7 +48,6 @@ public class JsonKeyMaster : IKeyMaster
         var userData = records.Find(u => u.username == username);
         if (userData == null)
         {
-            
             return ("", new Error("there is no user"));
         }
         
