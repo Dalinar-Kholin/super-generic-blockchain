@@ -9,10 +9,17 @@ namespace blockProject.httpServer;
 // szyfrowanie rekordów jest prawie gotowe
 public record Keys(byte[] PrivateKey, byte[] PublicKey)
 {
+<<<<<<< HEAD
     public static List<Keys>? LoadFromFile(string v)
     {
         throw new NotImplementedException();
     }
+=======
+	public static List<Keys>? LoadFromFile(string v)
+	{
+		throw new NotImplementedException();
+	}
+>>>>>>> 59c3d88f0e5c54166677cab7c4da55fa08a04881
 }
 
 public interface IKeyMaster
