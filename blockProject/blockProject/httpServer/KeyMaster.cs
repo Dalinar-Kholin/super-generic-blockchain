@@ -7,13 +7,19 @@ using Newtonsoft.Json;
 namespace blockProject.httpServer;
 
 // szyfrowanie rekordów jest prawie gotowe
-public record Keys(byte[] PrivateKey, byte[] PublicKey);
+public record Keys(byte[] PrivateKey, byte[] PublicKey)
+{
+    public static List<Keys>? LoadFromFile(string v)
+    {
+        throw new NotImplementedException();
+    }
+}
 
 public interface IKeyMaster
 {
     (string uuid, Error?) loadKeys(string username, string password); // załadowanie kluczy do szybkiej pamięcii danie im uuid
     (Keys keys, Error? err) getKeys(string uuid); // pobranie kluczy
-    Error? deepStore(Keys keys,string username, string password); // storowanie kluczy w jakiej instancji trwałej pamięci
+    Error? deepStore(Keys keys, string username, string password); // storowanie kluczy w jakiej instancji trwałej pamięci
 }
 
 
@@ -33,12 +39,12 @@ public class DatabaseRecord(byte[] privateKey, byte[] publicKey, string username
 // potem mozna to zmienic na jakiego redisa czy inne tego typu rzeczy
 public class JsonKeyMaster : IKeyMaster
 {
-    public static string path = ""; // ".KeyFile"; // ścieżka do pliku z kluczami na razie JSON
+    public static string path = "../../../../blockProject/.KeyFile"; // ".KeyFile"; // ścieżka do pliku z kluczami na razie JSON
     private static Mutex _mut = new();
 
     // cahce naszych kluczy 
     private static Dictionary<string, Keys> hashMap = new();
-    
+
     public (string uuid, Error?) loadKeys(string username, string password)
     {
         _mut.WaitOne();
@@ -50,7 +56,7 @@ public class JsonKeyMaster : IKeyMaster
         {
             return ("", new Error("there is no user"));
         }
-        
+
         byte[] salt = userData.salt;
         byte[] nonce = userData.iv;
         byte[] tag = userData.tag;
@@ -79,7 +85,7 @@ public class JsonKeyMaster : IKeyMaster
             return ("", new Error("bad password"));
         }
 
-        
+
         //sprawdznie czy klucz jest poprawny i spójny
         using var ecdsaPrivate = ECDsa.Create();
         ecdsaPrivate.ImportECPrivateKey(decryptedBytes, out _);
@@ -89,33 +95,33 @@ public class JsonKeyMaster : IKeyMaster
 
         // Przykładowa wiadomość
         var messageBytes = RandomNumberGenerator.GetBytes(64);
-        
+
         byte[] signature = ecdsaPrivate.SignData(messageBytes, HashAlgorithmName.SHA256);
         bool isValid = ecdsaPublic.VerifyData(messageBytes, signature, HashAlgorithmName.SHA256);
 
         if (!isValid) return ("", new Error("bad password"));
-        
+
         // jeżeli klucz jest poprawny, dodajemy go do cacha i 
         var uuid = Guid.NewGuid().ToString();
-        hashMap.Add(uuid, new Keys(decryptedBytes, userData.publicKey));        
-        
+        hashMap.Add(uuid, new Keys(decryptedBytes, userData.publicKey));
+
         return (uuid, null);
     }
 
     public (Keys keys, Error? err) getKeys(string uuid)
     {
         var res = hashMap.GetValueOrDefault(uuid);
-        return res != null ? (res, null) : (new Keys(new byte[]{}, new byte[]{}), new Error("bad uuid"));
+        return res != null ? (res, null) : (new Keys(new byte[] { }, new byte[] { }), new Error("bad uuid"));
     }
-    
-    
+
+
     //wywoływane przy rejestracji konta, powoduje trwałe zapamiętanie kluczy dla danego konta
     public Error? deepStore(Keys keys, string username, string password)
     {
 
         if (!File.Exists(path))
         {
-            return  new Error("there is no selected file ");
+            return new Error("there is no selected file ");
         }
 
         _mut.WaitOne();
@@ -127,7 +133,7 @@ public class JsonKeyMaster : IKeyMaster
         {
             return new Error("user already exists");
         }
-        
+
         byte[] salt = RandomNumberGenerator.GetBytes(16); // 16B salt
 
         // Derive key with Argon2id
@@ -150,7 +156,7 @@ public class JsonKeyMaster : IKeyMaster
 
         aes.Encrypt(iv, plaintextBytes, ciphertext, tag);
         // szyfrujemy tylko prywatny bo publiczny i tak nie ma znaczenia 
-        
+
         // zapisujemy nowe dane do pliku
         records.Add(new DatabaseRecord(ciphertext, keys.PublicKey, username, iv, salt, tag));
         _mut.WaitOne();
