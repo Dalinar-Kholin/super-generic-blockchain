@@ -7,7 +7,13 @@ using Newtonsoft.Json;
 namespace blockProject.httpServer;
 
 // szyfrowanie rekordów jest prawie gotowe
-public record Keys(byte[] PrivateKey, byte[] PublicKey);
+public record Keys(byte[] PrivateKey, byte[] PublicKey)
+{
+	public static List<Keys>? LoadFromFile(string v)
+	{
+		throw new NotImplementedException();
+	}
+}
 
 public interface IKeyMaster
 {
