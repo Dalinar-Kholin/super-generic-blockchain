@@ -80,7 +80,7 @@ public class Listener
                                 if (addedBlock != null)
                                 {
                                     Blockchain.GetInstance().AddBlock(addedBlock);
-                                    _blockchainDataHandler.writeBlockc(addedBlock);
+                                    _blockchainDataHandler.writeBlock(addedBlock);
                                     await _sender.SendData(addedBlock, endpoint);
                                 }
                                 else
@@ -102,7 +102,7 @@ public class Listener
                             // dodanie bloku do blockchaina
                             Blockchain.GetInstance().AddBlock(block);
                             //AddToBlockchain(block); // do zaimplementowania
-                            _blockchainDataHandler.writeBlockc(block); // zapisz blockchain do pliku
+                            _blockchainDataHandler.writeBlock(block); // zapisz blockchain do pliku
                             // wysłanie potwierdzenia otrzymania bloku
                             var response = new { Request = Requests.ADD_BLOCK };
                             var jsonResponse = JsonConvert.SerializeObject(response);

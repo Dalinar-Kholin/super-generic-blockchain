@@ -1,17 +1,13 @@
-global using BlockType = blockProject.blockchain.Block; // alias na typ aktualnie używanego bloku
+global using BlockType = blockProject.blockchain.Block; 
 namespace blockProject.blockchain;
 
-
-
-// uselless 
-// jakie metody powinnien udostępniać nasz blockchain
 public interface IBlockchain<T, Z>
 {
-    string GetParsedBlockchain(); // zwraca jako json
+    string GetParsedBlockchain(); // returns json
 
     T? AddRecord(Z Record);
-    void CreateBlock(T block); // gdy MY tworzymy blok
-    void AddBlock(T block); // gdy dostajemy blok
+    void CreateBlock(T block); 
+    void AddBlock(T block); 
 
     List<BlockType> GetChain();
     void SetChain(List<BlockType> blockchain);
