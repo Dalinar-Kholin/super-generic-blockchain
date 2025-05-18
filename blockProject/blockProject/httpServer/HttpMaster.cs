@@ -14,11 +14,11 @@ public class LoginMaster
 {
     private record registerData(string username, string password, string privateKey, string publicKey);
     private record loginData(string username, string password);
-    
+
     public async Task addUser(HttpContext context)
     {
         context.Response.ContentType = "application/json";
-        
+
         using var reader = new StreamReader(context.Request.Body);
         var body = await reader.ReadToEndAsync();
         // zakładam że w body będzie JSON o typie registerData
@@ -33,7 +33,7 @@ public class LoginMaster
             return;
         }
         var keyMaster = new JsonKeyMaster();
-        
+
         var err = keyMaster.deepStore(new Keys(Convert.FromBase64String(data.privateKey), Convert.FromBase64String(data.publicKey)), data.username, data.password);
         if (err != null)
         {
@@ -52,8 +52,8 @@ public class LoginMaster
             success = true,
             result = data.username
         });
-        
-        
+
+
     }
     public async Task login(HttpContext context)
     {
@@ -73,7 +73,7 @@ public class LoginMaster
             return;
         }
         var keyMaster = new JsonKeyMaster();
-        
+
         var res = keyMaster.loadKeys(data.username, data.password);
         if (res.Item2 != null)
         {
@@ -137,7 +137,8 @@ public class HttpMaster
         {
             context.Response.StatusCode = 403;
             return;
-        };
+        }
+        ;
         var res = new JsonKeyMaster().getKeys(cookie);
         if (res.err != null)
         {
@@ -187,8 +188,8 @@ public class HttpMaster
                     if (r.to == Convert.ToBase64String(res.keys.PublicKey))
                     {
                         // todo: odszyfrowanie wiadomości
-                        
-                        
+
+
                         accumulate.Add(r.decrypt(res.keys));
                     }
                     return null!;
@@ -196,17 +197,17 @@ public class HttpMaster
                 return accumulate;
             }
         );
-        
-        
+
+
         await context.Response.WriteAsJsonAsync(new
         {
             success = true,
             result = messages
         });
-        
-        
+
+
     }
-    
+
     public async Task AddNewNode(HttpContext context)
     {
         context.Response.ContentType = "application/json";
@@ -286,7 +287,8 @@ public class HttpMaster
         {
             context.Response.StatusCode = 403;
             return;
-        };
+        }
+        ;
         var res = new JsonKeyMaster().getKeys(cookie);
         // i tak oto mamy klucze kwestia jeszcze szyfrowania wiadomości, ale to na następny tydzień
 
@@ -301,6 +303,7 @@ public class HttpMaster
             return;
         }
 
+<<<<<<< HEAD
         block.AddRecord((new recordType(record.to, Encoding.ASCII.GetBytes(record.message), res.keys,
             record.shouldBeEncrypted)).toByte());
         singleFileBlockchainDataHandler.GetInstance().writeBlockchain(block.GetChain());
@@ -309,6 +312,26 @@ public class HttpMaster
         
         await sender.SendData(record);
         //if (rec != null) await sender.SendData(rec);
+=======
+        var rec = block.AddRecord(new recordType(record.to, Encoding.ASCII.GetBytes(record.message), res.keys, record.shouldBeEncrypted));
+
+
+        Console.WriteLine($"wartość rekordu: {record}");
+
+        if (rec != null)
+        {
+            Console.WriteLine("dodano rekord do blockchainu, dodano blok");
+            singleFileBlockchainDataHandler.GetInstance().writeBlockchain(Blockchain.GetInstance().GetChain());
+            await sender.SendData(rec);
+        }
+        else
+        {
+            Console.WriteLine("dodano rekord do blockchainu, ale nie dodano bloku");
+            await sender.SendData(record);
+        }
+
+
+>>>>>>> 17835c9abca14a499a0f9c2e96fc2042cd24fb29
 
         await context.Response.WriteAsJsonAsync(new { success = true, result = "" });
     }

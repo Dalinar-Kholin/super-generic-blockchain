@@ -37,8 +37,9 @@ public class Blockchain
         if (rec >= 3)
         {
             var newBlock = newestBlock;
-            newBlock.Hash = validator.calcHash(newBlock);
+            newBlock.PreviousHash = chain.Count == 0 ? "0" : chain[chain.Count - 1].Hash;
             newBlock.DataHash = validator.calcDataHash(newBlock);
+            newBlock.Hash = validator.calcHash(newBlock);
             chain.Add(newestBlock);
             newestBlock = new BlockType();
             return newBlock;

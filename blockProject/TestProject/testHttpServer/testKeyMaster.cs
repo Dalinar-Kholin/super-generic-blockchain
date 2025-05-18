@@ -3,9 +3,11 @@ using blockProject.httpServer;
 
 namespace TestProject.testHttpServer;
 
+
+[Collection("SequentialTests")]
 public class testKeyMaster
 {
-    
+
     [Trait("cat", "keyMaster")]
     [Fact]
     public void testStoring()
@@ -29,5 +31,5 @@ public class testKeyMaster
         var keys = keyMaster.getKeys(uuid);
         Assert.Null(keys.err);
         Assert.True(privateKey.SequenceEqual(keys.keys.PrivateKey));
-    } 
+    }
 }
