@@ -13,23 +13,12 @@ public class Blockchain
     private readonly IValidator validator = new Validator();
     private List<BlockType> chain = new();
 
-    // najowszy blok gdzie będziemy przekazywać dane rekordu
-    // a następnie przy spełnieniu warunków jest commitowany do blockchainu
+    // newest block to moduify when 3 records in it commited to blockchain
     public BlockType newestBlock = new();
 
-    private Blockchain()
-    {
-        // taka głupotka, ponieważ zakłada że mamy już stworzony plik z blockchainem, utrudnia testowanie 
-        /*var (storedChain, error) = _blockchainDataHandler.readBlockchain();
-        if (error != null) { // jeżeli nie udało się załadować blockchainu spadamy z rowerka
-            Console.WriteLine($"nie udało się załadować blockchainu z powodu {error.Message}");
-            Environment.Exit(1);
-        }
+    private Blockchain() { }
 
-        this.chain = storedChain;*/
-    }
-
-    // zwraca nam ilość elementów w recordzie
+    // return count of records in blockchain that let us konw to create block or not 
     public BlockType? AddRecord(byte[] Record)
     {
         var rec = newestBlock.AddRecord(Record);
@@ -37,9 +26,9 @@ public class Blockchain
         if (rec >= 3)
         {
             var newBlock = newestBlock;
-            newBlock.PreviousHash = chain.Count == 0 ? "0" : chain[chain.Count - 1].Hash;
-            newBlock.DataHash = validator.calcDataHash(newBlock);
-            newBlock.Hash = validator.calcHash(newBlock);
+            newBlock.header.PreviousHash = chain.Count == 0 ? "0" : chain[chain.Count - 1].header.Hash;
+            newBlock.header.DataHash = validator.calcDataHash(newBlock);
+            newBlock.header.Hash = validator.calcHash(newBlock);
             chain.Add(newestBlock);
             newestBlock = new BlockType();
             return newBlock;
@@ -52,8 +41,8 @@ public class Blockchain
     {
         _mutex.WaitOne();
 
-        block.Hash = validator.calcHash(block);
-        block.DataHash = validator.calcDataHash(block);
+        block.header.Hash = validator.calcHash(block);
+        block.header.DataHash = validator.calcDataHash(block);
 
         chain.Add(block);
         _mutex.ReleaseMutex();
@@ -63,7 +52,7 @@ public class Blockchain
     {
         _mutex.WaitOne();
         var err = validator.validate(block);
-        if (err != null) // jeżeli blok nie ma poprawnie zdefiniowanego hasha chcemy go odrzucić
+        if (err != null) // if not valid block we reject to include
         {
             Console.WriteLine($"{err.Message}");
             _mutex.ReleaseMutex();

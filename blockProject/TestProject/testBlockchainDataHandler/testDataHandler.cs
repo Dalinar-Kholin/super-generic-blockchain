@@ -25,16 +25,16 @@ public class testDataHandler
         var blockchain = Blockchain.GetInstance();
 
         blockchain.CreateBlock(block);
-        var block1 = new Block(block.Hash);
+        var block1 = new Block(block.header.Hash);
         block.AddRecord(testHelper.getRandomDummyRecord().toByte());
         blockchain.CreateBlock(block1);
-        block1 = new Block(block1.Hash);
+        block1 = new Block(block1.header.Hash);
         block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
         blockchain.CreateBlock(block1);
-        block1 = new Block(block1.Hash);
+        block1 = new Block(block1.header.Hash);
         block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
         blockchain.CreateBlock(block1);
-        block1 = new Block(block1.Hash);
+        block1 = new Block(block1.header.Hash);
         block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
         blockchain.CreateBlock(block1);
         return blockchain.GetChain();
@@ -65,7 +65,7 @@ public class testDataHandler
         Assert.Null(err);
         // sprawdzamy czy się zgadza
         for (var i = 0; i < res.Count; i++)
-            if (res[i].Hash != blockChain[i].Hash)
+            if (res[i].header.Hash != blockChain[i].header.Hash)
                 Assert.Fail("wczytane blockchainy nie są takie same");
 
         Blockchain.Reset();

@@ -19,7 +19,7 @@ public class Validator : IValidator
     {
         var data = new StringBuilder();
 
-        foreach (var record in block.Records) data.Append(record);
+        foreach (var record in block.body.Records) data.Append(record);
         using (var sha512 = SHA512.Create())
         {
             var inputBytes = Encoding.UTF8.GetBytes(data.ToString());
@@ -35,8 +35,8 @@ public class Validator : IValidator
     {
         var data = new StringBuilder();
 
-        data.Append(block.PreviousHash);
-        data.Append(block.DataHash);
+        data.Append(block.header.PreviousHash);
+        data.Append(block.header.DataHash);
 
         var stringableData = data.ToString();
 
@@ -53,7 +53,7 @@ public class Validator : IValidator
                 var result = sb.ToString();
                 if (result.Substring(0, 3) == "000")
                 {
-                    block.Nonce = i;
+                    block.header.Nonce = i;
                     return sb.ToString();
                 }
             }
@@ -62,15 +62,15 @@ public class Validator : IValidator
     public Error? validate(BlockType block)
     {
         // sprawdzanie hashy
-        if (calcDataHash(block) != block.DataHash || calcHash(block) != block.Hash) return new Error("bad hashesh");
+        if (calcDataHash(block) != block.header.DataHash || calcHash(block) != block.header.Hash) return new Error("bad hashesh");
         // sprawdzanie rekordu danych
-        if (block.recordsInBlock > 3) return new Error("to many records");
+        if (block.header.recordsInBlock > 3) return new Error("to many records");
         // sprawdzenie czy taki poprzednik jest w naszym blockchainie
         var blockchain = Blockchain.GetInstance().GetChain();
-        if (blockchain.FindIndex(blk => blk.Hash == block.PreviousHash) == -1)
+        if (blockchain.FindIndex(blk => blk.header.Hash == block.header.PreviousHash) == -1)
             return new Error("previous block doesnt exist in blockchain");
         // czy ten blok już nie znajduje się w blockchainie
-        if (blockchain.FindIndex(blk => blk.Hash == block.Hash) != -1) return new Error("block already in blockchain");
+        if (blockchain.FindIndex(blk => blk.header.Hash == block.header.Hash) != -1) return new Error("block already in blockchain");
         // sprawdzenie czy rekordy które chcemy dodać nie znajdują się już w blockchainine
         // todo: na razie wyłączone, czy to jest wgl potrzebne???
         var dataValidation = isDataValid(block);

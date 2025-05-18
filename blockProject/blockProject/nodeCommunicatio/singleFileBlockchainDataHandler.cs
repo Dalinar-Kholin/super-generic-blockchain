@@ -30,7 +30,7 @@ public class singleFileBlockchainDataHandler : IBlockchainDataHandler
         var (res, err) = readBlockchain();
         if (err != null) return err;
 
-        var index = res.FindIndex(b => b.Hash == blockhash);
+        var index = res.FindIndex(b => b.header.Hash == blockhash);
         if (index == -1) return new Error("there is no selected hash in blockchain");
         res[index] = block;
         err = writeBlockchain(res);
@@ -85,14 +85,14 @@ public class singleFileBlockchainDataHandler : IBlockchainDataHandler
     public (bool, Error?) isBlockInBlockchain(string blockHash)
     {
         var (blockchain, err) = readBlockchain();
-        return err != null ? (false, err) : (blockchain.FindIndex(block => block.Hash == blockHash) != -1, null);
+        return err != null ? (false, err) : (blockchain.FindIndex(block => block.header.Hash == blockHash) != -1, null);
     }
 
     public Error? deleteBlock(string blockHash)
     {
         var (blockchain, err) = readBlockchain();
         if (err != null) return err;
-        blockchain.RemoveAt(blockchain.FindIndex(block => block.Hash == blockHash));
+        blockchain.RemoveAt(blockchain.FindIndex(block => block.header.Hash == blockHash));
         err = writeBlockchain(blockchain);
         return err ?? null;
     }

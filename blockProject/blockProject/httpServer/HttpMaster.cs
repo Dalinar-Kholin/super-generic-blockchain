@@ -170,7 +170,7 @@ public class HttpMaster
             new List<simpleMessage>(), (accumulate, block) =>
             {
                 
-                var data = block.Records; 
+                var data = block.body.Records; 
                 List<messageRecord> records = new List<messageRecord>();
                 for (int i = 0; i < 3; i++)
                 {
@@ -347,7 +347,7 @@ public class HttpMaster
                 blockCount = chain.Count,
                 recordCount = chain.Aggregate(0, (acc, x) =>
                 {
-                    acc += x.recordsInBlock;
+                    acc += x.header.recordsInBlock;
                     return acc;
                 }), // taki brzydki fold i w sumie to pewnie mniej wydajny
                 workingTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - startTime,

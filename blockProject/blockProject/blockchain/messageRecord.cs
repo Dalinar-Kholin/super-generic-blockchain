@@ -2,6 +2,7 @@ global using recordType = blockProject.blockchain.messageRecord;
 using System.Security.Cryptography;
 using System.Text;
 using blockProject.httpServer;
+using blockProject.randomSrc;
 using Newtonsoft.Json;
 
 namespace blockProject.blockchain;
@@ -17,11 +18,10 @@ public class messageRecord
 
     public string to { get; set; }= "";
 
-
-    // sama wiadomość będzie zaszyfrowana za pomocą AES-a a klucz do AES-a będzie zaszyforwany za pomocą kluczy asymetrycznych
+    // message will be encrypted in AES, aes key will be encrypted by ECDSA
     public byte[] tag { get; set; } = [];
     public byte[] iv { get; set; } = [];
-    public byte[] message { get; set; } = { }; // jako iż może to być zaszyfrowane to string nie średnio się do tego nadaje
+    public byte[] message { get; set; } = { }; // will be encrypted so have to be in byte
     public byte[] sign { get; set; } ={ };// podpis
     public bool isEncoded { get; set; }
 
@@ -39,6 +39,8 @@ public class messageRecord
         this.isEncoded = isEncoded;
     }
 
+    
+    //to is reciver public key encoded in base64
     public messageRecord(string t, byte[] m, Keys keys, bool iE = true)
     {
         id = Guid.NewGuid();
@@ -52,7 +54,7 @@ public class messageRecord
         using var senderStatic = ECDiffieHellman.Create();
         senderStatic.ImportECPrivateKey(senderPrivateKey, out _);
 
-        if (iE && t != "0x0")
+        if (iE && t != "0x0") // encrypting message
         {
             byte[] ciphertext = new byte[m.Length];
             tag = new byte[16]; // 16B tag
@@ -73,7 +75,6 @@ public class messageRecord
         ecdsaPrivate.ImportECPrivateKey(senderPrivateKey, out _);
 
         sign = ecdsaPrivate.SignData(message, HashAlgorithmName.SHA256);
-        ;
         isEncoded = iE;
 
     }
@@ -85,13 +86,9 @@ public class messageRecord
         {
             return new simpleMessage(from, to, Encoding.ASCII.GetString(message));
         }
-
-
+        
         byte[] decryptedBytes = new byte[message.Length];
-
-
-        byte[] senderPrivateKey = keys.PrivateKey;
-
+        
         using var senderPublic = ECDiffieHellman.Create();
         senderPublic.ImportSubjectPublicKeyInfo(Convert.FromBase64String(from), out _);
 
@@ -119,9 +116,7 @@ public class messageRecord
 
     public messageRecord(byte[] data)
     {
-        var len = data.Length;
-        var tail = data.Skip(len-22).ToArray();
-        // Tablica setterów — każda przypisuje dane do jednego pola newRecord
+        // setters table
         Action<byte[]>[] tab = new Action<byte[]>[]
         {
             part => id = new Guid(Encoding.UTF8.GetString(Convert.FromBase64String(Encoding.UTF8.GetString(part)))),
@@ -133,21 +128,17 @@ public class messageRecord
             part => sign = Convert.FromBase64String(Encoding.UTF8.GetString(part)),
             part => isEncoded = part[0] == 0x01
         };
-
-        var i = 0;
+        // dumping message into byte
         foreach (var setter in tab)
         {
-            // Szukamy indeksu separatora (0x00)
             int zeroIndex = Array.FindIndex(data, x => x== 0x0);
             if (zeroIndex == -1)
-                throw new Exception($"Nieprawidłowy format danych wejściowych — brakuje separatora 0x00 _{string.Join(" ", tail.Select(b => $"0x{b:X2}"))}_ _{i}_");
+                throw new Exception($"missin 0x00 data separator");
 
-            byte[] part = data.Take(zeroIndex).ToArray(); // wyodrębnij segment jako byte[]
+            byte[] part = data.Take(zeroIndex).ToArray(); 
             setter(part);
-
-            // Zaktualizuj data, pomijając fragment i separator
+            
             data = data.Skip(zeroIndex + 1).ToArray();
-            i+= zeroIndex+1;
         }
         
     }
@@ -193,8 +184,15 @@ public class messageRecord
     {
         return $"{from} == {message} ==> {to}, guid = {id} {sign}";
     }
-    
 
+    public Error? validate(string senderPublicKey)
+    {
+        using var ecdsaPublic = ECDsa.Create();
+        ecdsaPublic.ImportSubjectPublicKeyInfo(Convert.FromBase64String(senderPublicKey),out _);
+        var isValid = ecdsaPublic.VerifyData(message, sign, HashAlgorithmName.SHA256);
+        return isValid ? null : new Error("bad signature");
+    }
+    
     
     
 

@@ -65,11 +65,17 @@ public class Listener
 
                             Console.WriteLine($"Otrzymano rekord: {receivedJson.data}");
                             var record = receivedJson.data.ToObject<messageRecord>();
-
-                            // todo: tutaj powinna odbyć się walidacja rekordu, czy jest poprawny, oraz czy już nie występuje w naszej sieci
-
+                            
                             if (record != null)
                             {
+                                var err = record.validate(record.from);
+                                // todo: check is this record in blockchain
+                                if (err != null)
+                                {
+                                    Console.WriteLine("bad signature\n");
+                                    break;
+                                }
+                                
                                 var addedBlock = Blockchain.GetInstance().AddRecord(record.toByte());
                                 if (addedBlock != null)
                                 {

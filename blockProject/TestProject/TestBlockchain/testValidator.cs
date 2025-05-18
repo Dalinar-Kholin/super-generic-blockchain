@@ -37,46 +37,46 @@ public class testValidator
 
     private Error? goodBlock()
     {
-        var blk = new Block(Blockchain.GetInstance().GetChain()[1].PreviousHash);
+        var blk = new Block(Blockchain.GetInstance().GetChain()[1].header.PreviousHash);
         for (var i = 0; i < Random.Shared.Next() % 3; i++)
             blk.AddRecord(testHelper.getRandomDummyRecord().toByte());
 
 
-        blk.DataHash = _validator.calcDataHash(blk);
-        blk.Hash = _validator.calcHash(blk);
+        blk.header.DataHash = _validator.calcDataHash(blk);
+        blk.header.Hash = _validator.calcHash(blk);
         return _validator.validate(blk);
     }
 
     private Error? badHashBlock()
     {
-        var blk = new Block(Blockchain.GetInstance().GetChain()[0].PreviousHash);
+        var blk = new Block(Blockchain.GetInstance().GetChain()[0].header.PreviousHash);
         for (var i = 0; i < Random.Shared.Next() % 3; i++)
             blk.AddRecord(testHelper.getRandomDummyRecord().toByte());
 
-        blk.DataHash = _validator.calcDataHash(blk);
-        blk.Hash = "skratada";
+        blk.header.DataHash = _validator.calcDataHash(blk);
+        blk.header.Hash = "skratada";
         return _validator.validate(blk);
     }
 
     private Error? badDataHash()
     {
-        var blk = new Block(Blockchain.GetInstance().GetChain()[0].PreviousHash);
+        var blk = new Block(Blockchain.GetInstance().GetChain()[0].header.PreviousHash);
         for (var i = 0; i < Random.Shared.Next() % 3; i++)
             blk.AddRecord(testHelper.getRandomDummyRecord().toByte());
 
-        blk.DataHash = _validator.calcDataHash(blk);
-        blk.Hash = "frlateda";
+        blk.header.DataHash = _validator.calcDataHash(blk);
+        blk.header.Hash = "frlateda";
         return _validator.validate(blk);
     }
 
     private Error? toMuchRecordInBlock()
     {
-        var blk = new Block(Blockchain.GetInstance().GetChain()[0].PreviousHash);
+        var blk = new Block(Blockchain.GetInstance().GetChain()[0].header.PreviousHash);
         for (var i = 0; i < Random.Shared.Next() % 3 + 4; i++)
             blk.AddRecord(testHelper.getRandomDummyRecord().toByte());
 
-        blk.DataHash = _validator.calcDataHash(blk);
-        blk.Hash = _validator.calcHash(blk);
+        blk.header.DataHash = _validator.calcDataHash(blk);
+        blk.header.Hash = _validator.calcHash(blk);
         return _validator.validate(blk);
     }
 

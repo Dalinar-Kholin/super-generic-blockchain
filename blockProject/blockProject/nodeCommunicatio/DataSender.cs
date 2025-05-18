@@ -11,7 +11,7 @@ using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace blockProject.nodeCommunicatio;
 
-// klasa do wysyłania danych do innych węzłów
+// class intendet to communication with other node
 public class DataSender
 {
     private readonly IBlockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
