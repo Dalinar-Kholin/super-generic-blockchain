@@ -21,7 +21,15 @@ public class testRecordEncoding
 
         var decryptedMessage  = record.decrypt(keys);
         Assert.Equal(message, decryptedMessage.message);
-
-
     }
+
+    [Fact]
+    [Trait("cat", "testHashing")]
+    public void testParsing()
+    {
+        var xd = testHelper.getRandomDummyRecord();
+        Assert.Equal(xd.message, new recordType(xd.toByte()).message);
+    }
+    
+    
 }

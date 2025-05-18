@@ -119,7 +119,8 @@ public class messageRecord
 
     public messageRecord(byte[] data)
     {
-
+        var len = data.Length;
+        var tail = data.Skip(len-22).ToArray();
         // Tablica setterów — każda przypisuje dane do jednego pola newRecord
         Action<byte[]>[] tab = new Action<byte[]>[]
         {
@@ -130,28 +131,30 @@ public class messageRecord
             part => iv = Convert.FromBase64String(Encoding.UTF8.GetString(part)),
             part => message = Convert.FromBase64String(Encoding.UTF8.GetString(part)),
             part => sign = Convert.FromBase64String(Encoding.UTF8.GetString(part)),
-            part => isEncoded = part[0] != 0x0
+            part => isEncoded = part[0] == 0x01
         };
 
+        var i = 0;
         foreach (var setter in tab)
         {
             // Szukamy indeksu separatora (0x00)
-            int zeroIndex = Array.IndexOf(data, (byte)0x00);
+            int zeroIndex = Array.FindIndex(data, x => x== 0x0);
             if (zeroIndex == -1)
-                throw new Exception("Nieprawidłowy format danych wejściowych — brakuje separatora 0x00");
+                throw new Exception($"Nieprawidłowy format danych wejściowych — brakuje separatora 0x00 _{string.Join(" ", tail.Select(b => $"0x{b:X2}"))}_ _{i}_");
 
             byte[] part = data.Take(zeroIndex).ToArray(); // wyodrębnij segment jako byte[]
             setter(part);
 
             // Zaktualizuj data, pomijając fragment i separator
             data = data.Skip(zeroIndex + 1).ToArray();
+            i+= zeroIndex+1;
         }
         
     }
 
     public byte[] toByte()
     {
-        var baseId = id.ToString();
+        var baseId = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(id.ToString()));
         var baseTo = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(to));
         var baseFrom = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(from));
         var baseTag = Convert.ToBase64String(tag);
@@ -168,7 +171,7 @@ public class messageRecord
                          baseIv.Length + 1 +
                          baseMessage.Length + 1 +
                          baseSign.Length + 1 +
-                         1/*is eco*/ + 1 + 1;
+                         1/*is eco*/ + 1;
         byte[] res = new byte[byteLength];
         var offset = 0;
 
@@ -181,7 +184,7 @@ public class messageRecord
             res[offset++] = 0x0;
         }
 
-        res[offset++] = (byte)(isEncoded ? 0x1 : 0x0);
+        res[offset++] = (byte)(isEncoded ? 0x01 : 0x02);
         res[offset] = 0x0;
         return res;
     }

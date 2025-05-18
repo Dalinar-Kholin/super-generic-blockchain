@@ -9,8 +9,8 @@ namespace TestProject.TestBlockchain;
 public class testHashing
 {
     [Trait("cat", "genBlock")]
-    //[Fact]
-    internal void generateBlockchain()
+    [Fact]
+    public void generateBlockchain()
     {
         using var sender = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP521);
         var keys = new Keys(sender.ExportECPrivateKey(), sender.ExportSubjectPublicKeyInfo());
