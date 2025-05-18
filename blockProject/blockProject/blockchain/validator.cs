@@ -64,7 +64,7 @@ public class Validator : IValidator
         // sprawdzanie hashy
         if (calcDataHash(block) != block.DataHash || calcHash(block) != block.Hash) return new Error("bad hashesh");
         // sprawdzanie rekordu danych
-        if (block.Records.Count > 3) return new Error("to many records");
+        if (block.recordsInBlock > 3) return new Error("to many records");
         // sprawdzenie czy taki poprzednik jest w naszym blockchainie
         var blockchain = Blockchain.GetInstance().GetChain();
         if (blockchain.FindIndex(blk => blk.Hash == block.PreviousHash) == -1)

@@ -70,7 +70,7 @@ public class Listener
 
                             if (record != null)
                             {
-                                var addedBlock = Blockchain.GetInstance().AddRecord(record);
+                                var addedBlock = Blockchain.GetInstance().AddRecord(record.toByte());
                                 if (addedBlock != null)
                                 {
                                     Blockchain.GetInstance().AddBlock(addedBlock);

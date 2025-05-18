@@ -28,8 +28,8 @@ public class testHashing
         
         
         var block = new Block("0x0");
-        block.AddRecord(testHelper.getRandomDummyRecord());
-        block.AddRecord(testHelper.getRandomDummyRecord());
+        block.AddRecord(testHelper.getRandomDummyRecord().toByte());
+        block.AddRecord(testHelper.getRandomDummyRecord().toByte());
         var blockchain = Blockchain.GetInstance();
         blockchain.CreateBlock(block);
         /*Assert.Equal(
@@ -40,21 +40,21 @@ public class testHashing
             block.DataHash);
         Assert.Equal(15516, block.Nonce);*/
         var block1 = new Block(block.Hash);
-        block.AddRecord(testHelper.getRandomDummyRecord());
-        block1.AddRecord(testHelper.getRandomDummyRecord());
+        block.AddRecord(testHelper.getRandomDummyRecord().toByte());
+        block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
         blockchain.CreateBlock(block1);
         block1 = new Block(block1.Hash);
-        block1.AddRecord(testHelper.getRandomDummyRecord());
-        block1.AddRecord(new messageRecord( Convert.ToBase64String(keys2.PublicKey), Encoding.ASCII.GetBytes("ale mamm esse"), keys));
-        block1.AddRecord(new messageRecord( Convert.ToBase64String(keys3.PublicKey), Encoding.ASCII.GetBytes("juz nie mam essy"), keys));
+        block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
+        block1.AddRecord(new messageRecord( Convert.ToBase64String(keys2.PublicKey), Encoding.ASCII.GetBytes("ale mamm esse"), keys).toByte());
+        block1.AddRecord(new messageRecord( Convert.ToBase64String(keys3.PublicKey), Encoding.ASCII.GetBytes("juz nie mam essy"), keys).toByte());
         blockchain.CreateBlock(block1);
         block1 = new Block(block1.Hash);
-        block1.AddRecord(testHelper.getRandomDummyRecord());
-        block1.AddRecord(new messageRecord( Convert.ToBase64String(keys4.PublicKey), Encoding.ASCII.GetBytes("ale mam essa znowu"), keys2));
+        block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
+        block1.AddRecord(new messageRecord( Convert.ToBase64String(keys4.PublicKey), Encoding.ASCII.GetBytes("ale mam essa znowu"), keys2).toByte());
         blockchain.CreateBlock(block1);
         block1 = new Block(block1.Hash);
-        block1.AddRecord(testHelper.getRandomDummyRecord());
-        block1.AddRecord(testHelper.getRandomDummyRecord());
+        block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
+        block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
         blockchain.CreateBlock(block1);
         Console.WriteLine($"chain Data := {blockchain.GetParsedBlockchain()}");
         Blockchain.Reset();
@@ -65,8 +65,8 @@ public class testHashing
     public void Test1()
     {
         var block = new Block("0x0");
-        block.AddRecord(testHelper.getRandomDummyRecord());
-        block.AddRecord(testHelper.getRandomDummyRecord());
+        block.AddRecord(testHelper.getRandomDummyRecord().toByte());
+        block.AddRecord(testHelper.getRandomDummyRecord().toByte());
         var blockchain = Blockchain.GetTestInstance();
         blockchain.CreateBlock(block);
         /*Assert.Equal(
@@ -88,7 +88,7 @@ public class testHashing
     public void Test2()
     {
         var block = new Block("0x0");
-        block.AddRecord(testHelper.getRandomDummyRecord());
+        block.AddRecord(testHelper.getRandomDummyRecord().toByte());
         var blockchain = Blockchain.GetTestInstance();
         blockchain.CreateBlock(block);
         Assert.True(block.Hash.Substring(0, 3) == "000");

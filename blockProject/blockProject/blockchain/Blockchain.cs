@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace blockProject.blockchain;
 
-public class Blockchain : IBlockchain<BlockType, messageRecord>
+public class Blockchain
 {
     private static Blockchain? _instance;
     private readonly IBlockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
@@ -30,12 +30,11 @@ public class Blockchain : IBlockchain<BlockType, messageRecord>
     }
 
     // zwraca nam ilość elementów w recordzie
-    public BlockType? AddRecord(messageRecord Record)
+    public BlockType? AddRecord(byte[] Record)
     {
-        var rec = newestBlock.Records;
-        rec.Add(Record);
+        var rec = newestBlock.AddRecord(Record);
 
-        if (rec.Count >= 3)
+        if (rec >= 3)
         {
             var newBlock = newestBlock;
             newBlock.Hash = validator.calcHash(newBlock);

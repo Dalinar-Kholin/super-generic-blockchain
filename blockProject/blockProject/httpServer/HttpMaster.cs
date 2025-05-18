@@ -148,10 +148,41 @@ public class HttpMaster
             });
             return;
         }
+        
+        var FindNthIndex = (byte[] data, int occurrence, int toFind) =>
+        {
+            int count = 0;
+            for (int i = 0; i < data.Length; i++)
+            {
+                if (data[i] == toFind)
+                {
+                    count++;
+                    if (count == occurrence)
+                        return i;
+                }
+            }
+
+            return -1; // nie znaleziono
+        };
+        
         var messages = Blockchain.GetInstance().GetChain().Aggregate(
             new List<simpleMessage>(), (accumulate, block) =>
             {
-                block.Records.Aggregate(new List<simpleMessage>(), (_, r) =>
+                
+                var data = block.Records; 
+                List<messageRecord> records = new List<messageRecord>();
+                for (int i = 0; i < 3; i++)
+                {
+                    var index = FindNthIndex(data, 8, 0x0);
+                    if (index==-1) break;
+                    byte[] part = data.Take(index).ToArray(); // wyodrębnij segment jako byte[]
+                    records.Add(new messageRecord(part));
+
+                    // Zaktualizuj data, pomijając fragment i separator
+                    data = data.Skip(index + 1).ToArray();
+                }
+                
+                records.Aggregate(new List<simpleMessage>(), (_, r) =>
                 {
                     if (r.to == Convert.ToBase64String(res.keys.PublicKey))
                     {
@@ -259,7 +290,7 @@ public class HttpMaster
         var res = new JsonKeyMaster().getKeys(cookie);
         // i tak oto mamy klucze kwestia jeszcze szyfrowania wiadomości, ale to na następny tydzień
 
-        IBlockchain<BlockType, messageRecord> block = Blockchain.GetInstance();
+        var block = Blockchain.GetInstance();
         using var reader = new StreamReader(context.Request.Body);
         var body = await reader.ReadToEndAsync();
         // zakładam że w body będzie JSON o typie Record
@@ -270,7 +301,8 @@ public class HttpMaster
             return;
         }
 
-        block.AddRecord(new recordType(record.to, Encoding.ASCII.GetBytes(record.message), res.keys, record.shouldBeEncrypted));
+        block.AddRecord((new recordType(record.to, Encoding.ASCII.GetBytes(record.message), res.keys,
+            record.shouldBeEncrypted)).toByte());
         singleFileBlockchainDataHandler.GetInstance().writeBlockchain(block.GetChain());
         
         Console.WriteLine($"wartość rekordu{record}");
@@ -302,11 +334,11 @@ public class HttpMaster
             result = new
             {
                 blockCount = chain.Count,
-                recordCount = chain.Aggregate(new List<messageRecord>(), (acc, x) =>
+                recordCount = chain.Aggregate(0, (acc, x) =>
                 {
-                    acc.AddRange(x.Records);
+                    acc += x.recordsInBlock;
                     return acc;
-                }).Count, // taki brzydki fold i w sumie to pewnie mniej wydajny
+                }), // taki brzydki fold i w sumie to pewnie mniej wydajny
                 workingTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - startTime,
                 friendNodeCount = sender.GetIps().Count,
                 friendNode = sender.GetIps()

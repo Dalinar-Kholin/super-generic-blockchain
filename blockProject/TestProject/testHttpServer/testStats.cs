@@ -97,7 +97,7 @@ public class testStats
                 
                 Assert.NotNull(deserialized);
                 Assert.Equal(chain.Count, deserialized.result.blockCount);
-                Assert.Equal(chain.Aggregate(0 , (i, block) => i + block.Records.Count ), deserialized.result.recordCount);
+                Assert.Equal(chain.Aggregate(0 , (i, block) => i + block.recordsInBlock ), deserialized.result.recordCount);
                 Assert.True(deserialized.result.friendNode.Length == 1);
                 Assert.Equal(new IPEndPoint(IPAddress.Parse(node2Ip), node2Port).ToString(),
                     deserialized.result.friendNode[0]);
