@@ -303,17 +303,8 @@ public class HttpMaster
             return;
         }
 
-<<<<<<< HEAD
-        block.AddRecord((new recordType(record.to, Encoding.ASCII.GetBytes(record.message), res.keys,
-            record.shouldBeEncrypted)).toByte());
-        singleFileBlockchainDataHandler.GetInstance().writeBlockchain(block.GetChain());
-        
-        Console.WriteLine($"wartość rekordu{record}");
-        
-        await sender.SendData(record);
-        //if (rec != null) await sender.SendData(rec);
-=======
-        var rec = block.AddRecord(new recordType(record.to, Encoding.ASCII.GetBytes(record.message), res.keys, record.shouldBeEncrypted));
+
+        var rec = block.AddRecord(new recordType(record.to, Encoding.ASCII.GetBytes(record.message), res.keys, record.shouldBeEncrypted).toByte());
 
 
         Console.WriteLine($"wartość rekordu: {record}");
@@ -329,9 +320,6 @@ public class HttpMaster
             Console.WriteLine("dodano rekord do blockchainu, ale nie dodano bloku");
             await sender.SendData(record);
         }
-
-
->>>>>>> 17835c9abca14a499a0f9c2e96fc2042cd24fb29
 
         await context.Response.WriteAsJsonAsync(new { success = true, result = "" });
     }
