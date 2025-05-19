@@ -33,7 +33,14 @@ public class LoginMaster
             return;
         }
         var keyMaster = new JsonKeyMaster();
-
+        if (data.privateKey.Length == 0)
+        {
+            await context.Response.WriteAsJsonAsync(new
+            {
+                success = true,
+                result = "where key stupido :/"
+            });    
+        }
         var err = keyMaster.deepStore(new Keys(Convert.FromBase64String(data.privateKey), Convert.FromBase64String(data.publicKey)), data.username, data.password);
         if (err != null)
         {
