@@ -1,0 +1,75 @@
+.loader {
+	position: relative;
+	width: 100vw;
+	height: 100vh;
+	background: linear-gradient(-45deg, #1e1e2f, #2b2d42, #3c366b, #202020);
+	background-size: 400% 400%;
+	animation: gradientFlow 15s ease infinite;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	overflow: hidden;
+}
+
+.leftImageWrapper,
+.rightImageWrapper {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	animation: slideIn 1.5s ease-out forwards;
+}
+
+.leftImageWrapper {
+	left: -300px;
+	animation-name: slideLeftToCenter;
+}
+
+.rightImageWrapper {
+	right: -300px;
+	animation-name: slideRightToCenter;
+}
+
+.image {
+	max-height: 226px;
+	width: auto;
+}
+
+.centerLine {
+	width: 5px;
+	height: 226px;
+	background-color: #146375;
+	z-index: 2;
+	opacity: 0;
+	animation: fadeInLine 1.5s ease-in forwards;
+	animation-delay: 1.2s;
+}
+
+@keyframes slideLeftToCenter {
+	to {
+		left: calc(50% - 100px / 2 - 198px);
+	}
+}
+
+@keyframes slideRightToCenter {
+	to {
+		right: calc(50% - 100px / 2 - 383px);
+	}
+}
+
+@keyframes fadeInLine {
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes gradientFlow {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
+}
