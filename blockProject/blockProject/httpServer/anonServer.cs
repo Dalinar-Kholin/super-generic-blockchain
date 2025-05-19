@@ -3,9 +3,6 @@ using Microsoft.AspNetCore.Http;
 
 namespace blockProject.httpServer;
 
-
-
-
 public class anonServer
 {
     public async Task getMessages(HttpContext context)
@@ -24,10 +21,10 @@ public class anonServer
                 }
             }
 
-            return -1; // nie znaleziono
+            return -1; // not found
         };
-        
-        
+
+
         var res = Blockchain.GetInstance().GetChain().Aggregate(
             new List<simpleMessage>(), (accumulate, block) =>
             {
@@ -36,14 +33,14 @@ public class anonServer
                 for (int i = 0; i < 3; i++)
                 {
                     var index = FindNthIndex(data, 8, 0x0);
-                    if (index==-1) break;
-                    byte[] part = data.Take(index+1).ToArray(); // wyodrębnij segment jako byte[]
+                    if (index == -1) break;
+                    byte[] part = data.Take(index + 1).ToArray(); // extract segment as byte[]
                     records.Add(new messageRecord(part));
 
-                    // Zaktualizuj data, pomijając fragment i separator
+                    // Update data, skipping fragment and separator
                     data = data.Skip(index + 1).ToArray();
                 }
-                    
+
                 records.Aggregate(new List<simpleMessage>(), (_, r) =>
                 {
                     if (r.to == "0x0") accumulate.Add(r.decrypt(new Keys([], [])));
@@ -52,12 +49,12 @@ public class anonServer
                 return accumulate;
             }
         );
-        
+
         await context.Response.WriteAsJsonAsync(new
         {
             success = true,
             result = res
         });
 
-    } 
+    }
 }

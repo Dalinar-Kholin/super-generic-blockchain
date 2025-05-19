@@ -54,16 +54,18 @@ public class TestHelper
             return await next(context);
         });
 
+        //api.MapGet("/SendBlock", httpMaster.SendBlock); // test method
+        //api.MapGet("/sendMessage", httpMaster.ping); // communication test
+        //api.MapGet("/getNode", (HttpContext httpContext) => "essa"); // test
+
         supervisor.MapGet("/addNewNode", httpMaster.AddNewNode);
-        supervisor.MapGet("/getFriendIp", httpMaster.GetFriendIp); // to jest testowe
         supervisor.MapGet("/getStats", httpMaster.GetStat);
         supervisor.MapGet("/ping", (HttpContext context) => "alive");
+        supervisor.MapGet("/getFriendIp", httpMaster.GetFriendIp); // test method
 
-        //api.MapGet("/SendBlock", httpMaster.SendBlock); // to jest testowe
-        // api.MapGet("/sendMessage", httpMaster.ping); // test komunikacji
         api.MapPost("/addRecord", httpMaster.AddRecord);
         api.MapGet("/getMessages", httpMaster.GetMessages);
-        //api.MapGet("/getNode", (HttpContext httpContext) => "essa"); // test
+
         var loginMaster = new LoginMaster();
 
         auth.MapPost("/login", loginMaster.login);
@@ -93,7 +95,7 @@ public class testRecordPropagation
         var (storedChain, error) = dh.readBlockchain();
         if (error != null)
         {
-            Console.WriteLine($"nie udało się załadować blockchainu z powodu {error.Message}");
+            Console.WriteLine($"failed to load blockchain due to: {error.Message}");
             Environment.Exit(1);
         }
 
@@ -125,7 +127,7 @@ public class testRecordPropagation
                     var responses = await Task.WhenAll(response1Task, response2Task);
                     if (responses[0].StatusCode == HttpStatusCode.OK &&
                         responses[1].StatusCode == HttpStatusCode.OK) break;
-                } // czeakanie aż servery http się włączą
+                } // waiting for http servers to start
                 catch (Exception)
                 {
                 }
@@ -139,18 +141,17 @@ public class testRecordPropagation
                 password = "nice"
             };
 
-            // Serializacja danych do JSON
+            // Serializing data to JSON
             var json = Newtonsoft.Json.JsonConvert.SerializeObject(loginData);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            // Wysłanie żądania POST
             HttpResponseMessage response1 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/auth/login", content);
 
             var body = await response1.Content.ReadAsStringAsync();
             var newTemplate = new { success = true, result = "sucess" };
             var newResult = JsonConvert.DeserializeAnonymousType(body, newTemplate);
-            Assert.True(newResult.success); // sprawdzamy czy dostaliśmy sukces
-            Assert.Equal("ogg", newResult.result); // sprawdzamy czy dostaliśmy poprawne dane
+            Assert.True(newResult.success);
+            Assert.Equal("ogg", newResult.result); // we check if we received the correct data
 
             var requestData = new
             {
