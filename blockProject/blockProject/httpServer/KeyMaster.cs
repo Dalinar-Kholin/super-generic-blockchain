@@ -28,15 +28,14 @@ public class DatabaseRecord(byte[] privateKey, byte[] publicKey, string username
 }
 
 
-
-// zarządca kluczy trzymający klucze w pliku .json
 // potem mozna to zmienic na jakiego redisa czy inne tego typu rzeczy
+// key manager holding keys in a .json file
 public class JsonKeyMaster : IKeyMaster
 {
-    public static string path = "../../../../blockProject/.KeyFile"; // ".KeyFile"; // ścieżka do pliku z kluczami na razie JSON
+    public static string path = "../../../../blockProject/.KeyFile"; // ".KeyFile"; // path to key file for now JSON
     private static Mutex _mut = new();
 
-    // cahce naszych kluczy 
+    // cashe of our keys
     private static Dictionary<string, Keys> hashMap = new();
 
     public (string uuid, Error?) loadKeys(string username, string password)
@@ -80,14 +79,14 @@ public class JsonKeyMaster : IKeyMaster
         }
 
 
-        //sprawdznie czy klucz jest poprawny i spójny
+        // checking if the key is correct and consistent
         using var ecdsaPrivate = ECDsa.Create();
         ecdsaPrivate.ImportECPrivateKey(decryptedBytes, out _);
 
         using var ecdsaPublic = ECDsa.Create();
         ecdsaPublic.ImportSubjectPublicKeyInfo(userData.publicKey, out _);
 
-        // Przykładowa wiadomość
+        // Sample message
         var messageBytes = RandomNumberGenerator.GetBytes(64);
 
         byte[] signature = ecdsaPrivate.SignData(messageBytes, HashAlgorithmName.SHA256);
@@ -95,7 +94,7 @@ public class JsonKeyMaster : IKeyMaster
 
         if (!isValid) return ("", new Error("bad password"));
 
-        // jeżeli klucz jest poprawny, dodajemy go do cacha i 
+        // if the key is correct we add it to the cache
         var uuid = Guid.NewGuid().ToString();
         hashMap.Add(uuid, new Keys(decryptedBytes, userData.publicKey));
 
@@ -109,7 +108,7 @@ public class JsonKeyMaster : IKeyMaster
     }
 
 
-    //wywoływane przy rejestracji konta, powoduje trwałe zapamiętanie kluczy dla danego konta
+    // called when registering an account, causes keys for a given account to be permanently remembered
     public Error? deepStore(Keys keys, string username, string password)
     {
 
@@ -149,9 +148,9 @@ public class JsonKeyMaster : IKeyMaster
         byte[] tag = new byte[16]; // 16B tag
 
         aes.Encrypt(iv, plaintextBytes, ciphertext, tag);
-        // szyfrujemy tylko prywatny bo publiczny i tak nie ma znaczenia 
+        // we only encrypt the private one because the public one doesn't matter anyway
 
-        // zapisujemy nowe dane do pliku
+        // we save new data to the file
         records.Add(new DatabaseRecord(ciphertext, keys.PublicKey, username, iv, salt, tag));
         _mut.WaitOne();
         var parsedJson = JsonConvert.SerializeObject(records);

@@ -18,7 +18,7 @@ public class Blockchain
 
     private Blockchain() { }
 
-    // return count of records in blockchain that let us konw to create block or not 
+    // return count of records in blockchain that let us know to create block or not 
     public BlockType? AddRecord(byte[] Record)
     {
         var rec = newestBlock.AddRecord(Record);
@@ -94,8 +94,8 @@ public class Blockchain
         return new Blockchain();
     }
 
-    // Metoda dostępna tylko w środowisku testowym
-    public static void Reset()
+	// method is available only in test environment
+	public static void Reset()
     {
         _instance = null;
     }

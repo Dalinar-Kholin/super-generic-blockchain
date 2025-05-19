@@ -9,7 +9,6 @@ using Newtonsoft.Json;
 namespace blockProject.httpServer;
 
 
-
 public class LoginMaster
 {
     private record registerData(string username, string password, string privateKey, string publicKey);
@@ -21,7 +20,7 @@ public class LoginMaster
 
         using var reader = new StreamReader(context.Request.Body);
         var body = await reader.ReadToEndAsync();
-        // zakładam że w body będzie JSON o typie registerData
+        // we assume that the body will be JSON of type registerData
         var data = JsonConvert.DeserializeObject<registerData>(body);
         if (data == null)
         {
@@ -101,7 +100,6 @@ public class LoginMaster
 }
 
 
-
 public class HttpMaster
 {
     private readonly DataSender sender;
@@ -112,15 +110,16 @@ public class HttpMaster
         this.sender = sender;
     }
 
-    // wysłanie bloku do sąsiadów
+    // sending block to other nodes
     public async Task SendBlock(HttpContext context)
     {
         // tutaj jest chyba więcej logiki do dodania
+
         var errorResult = await sender.SendData(Blockchain.GetInstance().newestBlock);
 
         if (errorResult != null)
         {
-            Console.WriteLine($"Błąd: {errorResult.Message}");
+            Console.WriteLine($"Error: {errorResult.Message}");
             await context.Response.WriteAsJsonAsync(new
             {
                 success = false,
@@ -156,7 +155,7 @@ public class HttpMaster
             });
             return;
         }
-        
+
         var FindNthIndex = (byte[] data, int occurrence, int toFind) =>
         {
             int count = 0;
@@ -170,31 +169,31 @@ public class HttpMaster
                 }
             }
 
-            return -1; // nie znaleziono
+            return -1; // not found
         };
-        
+
         var messages = Blockchain.GetInstance().GetChain().Aggregate(
             new List<simpleMessage>(), (accumulate, block) =>
             {
-                
-                var data = block.body.Records; 
+
+                var data = block.body.Records;
                 List<messageRecord> records = new List<messageRecord>();
                 for (int i = 0; i < 3; i++)
                 {
                     var index = FindNthIndex(data, 8, 0x0);
-                    if (index==-1) break;
-                    byte[] part = data.Take(index).ToArray(); // wyodrębnij segment jako byte[]
+                    if (index == -1) break;
+                    byte[] part = data.Take(index).ToArray(); // extract segment as byte[]
                     records.Add(new messageRecord(part));
 
-                    // Zaktualizuj data, pomijając fragment i separator
+                    // Update data, skipping fragment and separator
                     data = data.Skip(index + 1).ToArray();
                 }
-                
+
                 records.Aggregate(new List<simpleMessage>(), (_, r) =>
                 {
                     if (r.to == Convert.ToBase64String(res.keys.PublicKey))
                     {
-                        // todo: odszyfrowanie wiadomości
+                        // todo: decrypting the message
 
 
                         accumulate.Add(r.decrypt(res.keys));
@@ -211,8 +210,6 @@ public class HttpMaster
             success = true,
             result = messages
         });
-
-
     }
 
     public async Task AddNewNode(HttpContext context)
@@ -297,12 +294,14 @@ public class HttpMaster
         }
         ;
         var res = new JsonKeyMaster().getKeys(cookie);
+
         // i tak oto mamy klucze kwestia jeszcze szyfrowania wiadomości, ale to na następny tydzień
 
         var block = Blockchain.GetInstance();
         using var reader = new StreamReader(context.Request.Body);
         var body = await reader.ReadToEndAsync();
-        // zakładam że w body będzie JSON o typie Record
+
+        // we assume that the body will be JSON of Record type
         var record = JsonConvert.DeserializeObject<recivedRecordData>(body);
         if (record == null)
         {
@@ -318,13 +317,11 @@ public class HttpMaster
 
         if (rec != null)
         {
-            Console.WriteLine("dodano rekord do blockchainu, dodano blok");
             singleFileBlockchainDataHandler.GetInstance().writeBlockchain(Blockchain.GetInstance().GetChain());
             await sender.SendData(rec);
         }
         else
         {
-            Console.WriteLine("dodano rekord do blockchainu, ale nie dodano bloku");
             await sender.SendData(record);
         }
 
@@ -343,7 +340,7 @@ public class HttpMaster
     public async Task GetStat(HttpContext context)
     {
         context.Response.ContentType = "application/json";
-        // TODO: dodać ile my wyprodukowaliśmy węzłów oraz rekordów danych
+        // TODO: add how many nodes and data records we produced
         var chain = Blockchain.GetInstance().GetChain();
 
         await context.Response.WriteAsJsonAsync(new
