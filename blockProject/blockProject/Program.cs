@@ -11,32 +11,21 @@ namespace blockProject;
 
 internal class Program
 {
-<<<<<<< HEAD
     private static void Main(string[] args)
     {
-=======
-
-    private static void Main(string[] args)
-    {
-
->>>>>>> 579c16cb7708f7886717b918243d10ef78e4afef
         var port = int.Parse(args[0]);
 
         // blockchain initialization 
         var dh = singleFileBlockchainDataHandler.GetInstance();
         JsonKeyMaster.path = ".KeyFile";
 
-        // loading blockhain data
+        // loading blockchain data
         var (storedChain, error) = dh.readBlockchain();
         if (error == null)
         {
             Blockchain.GetInstance().SetChain(storedChain);
         }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 579c16cb7708f7886717b918243d10ef78e4afef
         var sender = new DataSender();
         var httpMaster = new HttpMaster(sender);
         new Thread(new Listener(port).Start).Start(); // start listener for node communication
@@ -49,16 +38,15 @@ internal class Program
             options.AddPolicy("AllowFrontend", policy =>
             {
                 policy
-                    .WithOrigins("http://localhost:3000") 
+                    .WithOrigins("http://localhost:3000")
                     .AllowAnyHeader()
                     .AllowAnyMethod()
-                    .AllowCredentials(); 
+                    .AllowCredentials();
             });
         });
 
         var app = builder.Build();
 
-<<<<<<< HEAD
         // CORS
         app.UseCors("AllowFrontend");
 
@@ -67,28 +55,13 @@ internal class Program
         app.UseStaticFiles();
         app.MapFallbackToFile("index.html");
 
-        // teraz grupujemy API
-=======
-
-        app.UseHttpsRedirection();
-
-        app.UseDefaultFiles(); // Searches for index.html automatically
-
-        app.UseStaticFiles();
-        app.MapFallbackToFile("index.html");
-
         // API grouping
-
->>>>>>> 579c16cb7708f7886717b918243d10ef78e4afef
         var api = app.MapGroup("/api");
         var anon = app.MapGroup("/anon");
         var auth = app.MapGroup("/auth");
         var supervisor = app.MapGroup("/supervisor");
 
-<<<<<<< HEAD
         // auth filter — wymaga ciasteczka uuid i poprawnego klucza
-=======
->>>>>>> 579c16cb7708f7886717b918243d10ef78e4afef
         api.AddEndpointFilter(async (context, next) =>
         {
             var cookie = context.HttpContext.Request.Cookies["uuid"];
@@ -96,23 +69,12 @@ internal class Program
             {
                 context.HttpContext.Response.StatusCode = 403;
                 return null;
-<<<<<<< HEAD
-            };
-
-=======
             }
-            ;
->>>>>>> 579c16cb7708f7886717b918243d10ef78e4afef
+
             var res = new JsonKeyMaster().getKeys(cookie);
             if (res.err != null)
             {
                 Console.WriteLine($"error := {res.err.Message}");
-<<<<<<< HEAD
-=======
-
-
-
->>>>>>> 579c16cb7708f7886717b918243d10ef78e4afef
                 context.HttpContext.Response.StatusCode = 403;
                 return null;
             }
@@ -134,21 +96,11 @@ internal class Program
             });
 
         supervisor.MapGet("/addNewNode", httpMaster.AddNewNode);
-<<<<<<< HEAD
-        supervisor.MapGet("/getFriendIp", httpMaster.GetFriendIp);
-=======
         supervisor.MapGet("/getFriendIp", httpMaster.GetFriendIp); // test method
->>>>>>> 579c16cb7708f7886717b918243d10ef78e4afef
         supervisor.MapGet("/getStats", httpMaster.GetStat);
 
         api.MapPost("/addRecord", httpMaster.AddRecord);
         api.MapGet("/getMessages", httpMaster.GetMessages);
-<<<<<<< HEAD
-=======
-
-
-        var loginMaster = new LoginMaster();
->>>>>>> 579c16cb7708f7886717b918243d10ef78e4afef
 
         var loginMaster = new LoginMaster();
         auth.MapPost("/login", loginMaster.login);
