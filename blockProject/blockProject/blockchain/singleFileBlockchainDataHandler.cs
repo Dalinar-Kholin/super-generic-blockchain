@@ -24,7 +24,7 @@ public class singleFileBlockchainDataHandler : IBlockchainDataHandler
     }
 
 
-    // ta funckcja nie ma sensu jeżeli nie modyfikujemy ostatniego bloku, ponieważ będziemy niszczyć ciąg hashy
+    // this function doesn't make sense if we don't modify the last block, because we will destroy the hash chain
     public Error? editBlock(string blockHash, BlockType block)
     {
         var (res, err) = readBlockchain();
@@ -52,15 +52,15 @@ public class singleFileBlockchainDataHandler : IBlockchainDataHandler
             return new Error($"Write failed: {e.Message}");
         }
 
-		finally
-		{
-			_mutex.ReleaseMutex();
-		}
+        finally
+        {
+            _mutex.ReleaseMutex();
+        }
 
-		return null;
+        return null;
     }
 
-    // tylko dodanie bloku do blockchainnu zamiast zapisywać cały blockchain// a przynajmnie j tak powinno być ale na razie jest XD
+    // just adding a block to the blockchain instead of saving the entire blockchain// or at least that's how it should be
     public Error? writeBlock(BlockType blocks)
     {
         var (blockchain, err) = readBlockchain();
@@ -71,47 +71,47 @@ public class singleFileBlockchainDataHandler : IBlockchainDataHandler
         return null;
     }
 
-	public (List<BlockType>, Error?) readBlockchain()
-	{
-		_mutex.WaitOne();
-		try
-		{
-			if (!File.Exists(_filePath))
-			{
-				return (new List<BlockType>(), new Error("Blockchain file not found"));
-			}
+    public (List<BlockType>, Error?) readBlockchain()
+    {
+        _mutex.WaitOne();
+        try
+        {
+            if (!File.Exists(_filePath))
+            {
+                return (new List<BlockType>(), new Error("Blockchain file not found"));
+            }
 
-			var json = File.ReadAllText(_filePath);
-			var chain = JsonConvert.DeserializeObject<List<BlockType>>(json) ?? new List<BlockType>();
-			return (chain, null);
-		}
-		catch (Exception e)
-		{
-			return (new List<BlockType>(), new Error($"Read failed: {e.Message}"));
-		}
-		finally
-		{
-			_mutex.ReleaseMutex();
-		}
-	}
+            var json = File.ReadAllText(_filePath);
+            var chain = JsonConvert.DeserializeObject<List<BlockType>>(json) ?? new List<BlockType>();
+            return (chain, null);
+        }
+        catch (Exception e)
+        {
+            return (new List<BlockType>(), new Error($"Read failed: {e.Message}"));
+        }
+        finally
+        {
+            _mutex.ReleaseMutex();
+        }
+    }
 
     public (bool, Error?) isBlockInBlockchain(string blockHash)
     {
         var (blockchain, err) = readBlockchain();
-		if (err != null) return (false, err);
+        if (err != null) return (false, err);
 
-		return (blockchain.Exists(block => block.header.Hash == blockHash), null);
+        return (blockchain.Exists(block => block.header.Hash == blockHash), null);
     }
 
     public Error? deleteBlock(string blockHash)
     {
         var (blockchain, err) = readBlockchain();
 
-		var index = blockchain.FindIndex(block => block.header.Hash == blockHash);
-		if (index == -1) return new Error("Block not found");
-		blockchain.RemoveAt(index);
+        var index = blockchain.FindIndex(block => block.header.Hash == blockHash);
+        if (index == -1) return new Error("Block not found");
+        blockchain.RemoveAt(index);
 
-		err = writeBlockchain(blockchain);
+        err = writeBlockchain(blockchain);
         return err;
     }
 

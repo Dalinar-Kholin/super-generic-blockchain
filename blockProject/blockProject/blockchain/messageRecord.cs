@@ -16,13 +16,13 @@ public class messageRecord
 
     public string from { get; set; } = "";
 
-    public string to { get; set; }= "";
+    public string to { get; set; } = "";
 
     // message will be encrypted in AES, aes key will be encrypted by ECDSA
     public byte[] tag { get; set; } = [];
     public byte[] iv { get; set; } = [];
     public byte[] message { get; set; } = { }; // will be encrypted so have to be in byte
-    public byte[] sign { get; set; } ={ };// podpis
+    public byte[] sign { get; set; } = { }; // signature
     public bool isEncoded { get; set; }
 
     [JsonConstructor]
@@ -39,7 +39,7 @@ public class messageRecord
         this.isEncoded = isEncoded;
     }
 
-    
+
     //to is reciver public key encoded in base64
     public messageRecord(string t, byte[] m, Keys keys, bool iE = true)
     {
@@ -86,9 +86,9 @@ public class messageRecord
         {
             return new simpleMessage(from, to, Encoding.ASCII.GetString(message));
         }
-        
+
         byte[] decryptedBytes = new byte[message.Length];
-        
+
         using var senderPublic = ECDiffieHellman.Create();
         senderPublic.ImportSubjectPublicKeyInfo(Convert.FromBase64String(from), out _);
 
@@ -131,16 +131,16 @@ public class messageRecord
         // dumping message into byte
         foreach (var setter in tab)
         {
-            int zeroIndex = Array.FindIndex(data, x => x== 0x0);
+            int zeroIndex = Array.FindIndex(data, x => x == 0x0);
             if (zeroIndex == -1)
                 throw new Exception($"missin 0x00 data separator");
 
-            byte[] part = data.Take(zeroIndex).ToArray(); 
+            byte[] part = data.Take(zeroIndex).ToArray();
             setter(part);
-            
+
             data = data.Skip(zeroIndex + 1).ToArray();
         }
-        
+
     }
 
     public byte[] toByte()
@@ -152,9 +152,9 @@ public class messageRecord
         var baseIv = Convert.ToBase64String(iv);
         var baseMessage = Convert.ToBase64String(message);
         var baseSign = Convert.ToBase64String(sign);
-        
-        
-        var byteLength = baseId.Length+1 + 
+
+
+        var byteLength = baseId.Length + 1 +
                          baseFrom.Length + 1 /*one extra space for 0x0 byte to separate fileds*/ +
                          /*additionaly we cant allow field to have 0x0 byte insite so we have to base Encoded all fields*/
                          baseTo.Length + 1 +
@@ -188,15 +188,15 @@ public class messageRecord
     public Error? validate(string senderPublicKey)
     {
         using var ecdsaPublic = ECDsa.Create();
-        ecdsaPublic.ImportSubjectPublicKeyInfo(Convert.FromBase64String(senderPublicKey),out _);
+        ecdsaPublic.ImportSubjectPublicKeyInfo(Convert.FromBase64String(senderPublicKey), out _);
         var isValid = ecdsaPublic.VerifyData(message, sign, HashAlgorithmName.SHA256);
         return isValid ? null : new Error("bad signature");
     }
-    
-    
-    
+
+
+
 
 }
 
 
-public record simpleMessage(string from,string to, string message);
+public record simpleMessage(string from, string to, string message);
