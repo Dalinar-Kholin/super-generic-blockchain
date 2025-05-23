@@ -12,50 +12,59 @@ namespace blockProject;
 
 internal class Program
 {
-
     private static void Main(string[] args)
     {
-
         var port = int.Parse(args[0]);
 
         // blockchain initialization 
         var dh = singleFileBlockchainDataHandler.GetInstance();
         JsonKeyMaster.path = ".KeyFile";
 
-        // loading blockhain data
+        // loading blockchain data
         var (storedChain, error) = dh.readBlockchain();
         if (error == null)
         {
             Blockchain.GetInstance().SetChain(storedChain);
         }
 
-
         var sender = new DataSender();
         var httpMaster = new HttpMaster(sender);
-
         new Thread(new Listener(port).Start).Start(); // start listener for node communication
         
         new Thread(new NodeCommunicationSupervisor(sender).Start).Start(); // menage communication with node
         
         var builder = WebApplication.CreateBuilder();
 
+        // CORS policy
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowFrontend", policy =>
+            {
+                policy
+                    .WithOrigins("http://localhost:3000")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+        });
+
         var app = builder.Build();
 
+        // CORS
+        app.UseCors("AllowFrontend");
 
         app.UseHttpsRedirection();
-
-        app.UseDefaultFiles(); // Searches for index.html automatically
-
+        app.UseDefaultFiles(); // Szuka index.html automatycznie
         app.UseStaticFiles();
         app.MapFallbackToFile("index.html");
 
         // API grouping
-
         var api = app.MapGroup("/api");
         var anon = app.MapGroup("/anon");
         var auth = app.MapGroup("/auth");
         var supervisor = app.MapGroup("/supervisor");
 
+        // auth filter — wymaga ciasteczka uuid i poprawnego klucza
         api.AddEndpointFilter(async (context, next) =>
         {
             var cookie = context.HttpContext.Request.Cookies["uuid"];
@@ -64,17 +73,15 @@ internal class Program
                 context.HttpContext.Response.StatusCode = 403;
                 return null;
             }
-            ;
+
             var res = new JsonKeyMaster().getKeys(cookie);
             if (res.err != null)
             {
                 Console.WriteLine($"error := {res.err.Message}");
-
-
-
                 context.HttpContext.Response.StatusCode = 403;
                 return null;
             }
+
             return await next(context);
         });
 
@@ -98,9 +105,7 @@ internal class Program
         api.MapPost("/addRecord", httpMaster.AddRecord);
         api.MapGet("/getMessages", httpMaster.GetMessages);
 
-
         var loginMaster = new LoginMaster();
-
         auth.MapPost("/login", loginMaster.login);
         auth.MapPost("/register", loginMaster.addUser);
 
