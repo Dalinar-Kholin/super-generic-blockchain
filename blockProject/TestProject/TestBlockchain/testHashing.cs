@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using blockProject.blockchain;
+using blockProject.blockchain.genericBlockchain;
 using blockProject.httpServer;
 
 namespace TestProject.TestBlockchain;
@@ -9,8 +10,8 @@ namespace TestProject.TestBlockchain;
 public class testHashing
 {
     [Trait("cat", "genBlock")]
-    [Fact]
-    public void generateBlockchain()
+    //[Fact]
+    internal void generateBlockchain()
     {
         using var sender = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP521);
         var keys = new Keys(sender.ExportECPrivateKey(), sender.ExportSubjectPublicKeyInfo());

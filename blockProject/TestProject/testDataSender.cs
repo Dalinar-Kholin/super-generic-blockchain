@@ -18,9 +18,9 @@ public class DataSenderTests
 		var sender = new DataSender();
 		var ip = new IPEndPoint(IPAddress.Loopback, 12345);
 
-		sender.AddIP(ip);
+		sender.getIpMaster().AddIP(ip);
 
-		Assert.Contains(ip.ToString(), sender.GetIps());
+		Assert.Contains(ip.ToString(), sender.getIpMaster().GetIps());
 	}
 
 	[Fact]
@@ -29,10 +29,10 @@ public class DataSenderTests
 		var sender = new DataSender();
 		var ip = new IPEndPoint(IPAddress.Loopback, 12345);
 
-		sender.AddIP(ip);
-		sender.AddIP(ip);
+		sender.getIpMaster().AddIP(ip);
+		sender.getIpMaster().AddIP(ip);
 
-		Assert.Single(sender.GetIps());
+		Assert.Single(sender.getIpMaster().GetIps());
 	}
 
 	[Fact]
@@ -66,10 +66,10 @@ public class DataSenderTests
 		var ip1 = new IPEndPoint(IPAddress.Parse("192.168.0.1"), 1234);
 		var ip2 = new IPEndPoint(IPAddress.Parse("10.0.0.2"), 5678);
 
-		sender.AddIP(ip1);
-		sender.AddIP(ip2);
+		sender.getIpMaster().AddIP(ip1);
+		sender.getIpMaster().AddIP(ip2);
 
-		var ips = sender.GetIps();
+		var ips = sender.getIpMaster().GetIps();
 
 		Assert.Contains("192.168.0.1:1234", ips);
 		Assert.Contains("10.0.0.2:5678", ips);

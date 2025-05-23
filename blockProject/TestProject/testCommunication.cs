@@ -1,5 +1,6 @@
 using System.Net;
 using blockProject.blockchain;
+using blockProject.blockchain.genericBlockchain;
 using blockProject.httpServer;
 using blockProject.nodeCommunicatio;
 using Microsoft.AspNetCore.Builder;

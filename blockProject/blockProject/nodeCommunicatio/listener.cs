@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using blockProject.blockchain;
+using blockProject.blockchain.genericBlockchain;
 using blockProject.nodeCommunicatio.communicationFrames;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

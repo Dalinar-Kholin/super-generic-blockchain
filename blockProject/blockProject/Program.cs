@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using blockProject.blockchain;
+using blockProject.blockchain.genericBlockchain;
 using blockProject.httpServer;
 using blockProject.nodeCommunicatio;
 using Microsoft.AspNetCore.Builder;
@@ -33,7 +34,9 @@ internal class Program
         var httpMaster = new HttpMaster(sender);
 
         new Thread(new Listener(port).Start).Start(); // start listener for node communication
-
+        
+        new Thread(new NodeCommunicationSupervisor(sender).Start).Start(); // menage communication with node
+        
         var builder = WebApplication.CreateBuilder();
 
         var app = builder.Build();

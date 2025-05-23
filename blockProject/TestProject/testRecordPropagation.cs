@@ -11,6 +11,7 @@ using Xunit.Abstractions;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using blockProject.blockchain.genericBlockchain;
 
 namespace TestProject.testAddingRecords;
 

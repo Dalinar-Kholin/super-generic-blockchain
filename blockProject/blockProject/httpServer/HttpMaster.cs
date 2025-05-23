@@ -2,6 +2,7 @@ using System.Buffers.Text;
 using System.Net;
 using System.Text;
 using blockProject.blockchain;
+using blockProject.blockchain.genericBlockchain;
 using blockProject.nodeCommunicatio;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
@@ -221,7 +222,7 @@ public class HttpMaster
             var destPort = port.ToString();
             Console.WriteLine(ip.ToString());
 
-            sender.AddIP(new IPEndPoint(IPAddress.Parse(ip.ToString()), int.Parse(destPort)));
+            sender.getIpMaster().AddIP(new IPEndPoint(IPAddress.Parse(ip.ToString()), int.Parse(destPort)));
             Console.WriteLine("dodano nowy węzeł");
 
             var errorResult = await sender.ReceiveBlockchain();
@@ -256,12 +257,12 @@ public class HttpMaster
     public async Task GetFriendIp(HttpContext context)
     {
         context.Response.ContentType = "application/json";
-        await context.Response.WriteAsJsonAsync(new { success = true, result = sender.GetIps() });
+        await context.Response.WriteAsJsonAsync(new { success = true, result = sender.getIpMaster().GetIps() });
     }
 
     public async Task ping(HttpContext context)
     {
-        var res = await sender.pingNode();
+        var res = await sender.pingNodes();
         Console.WriteLine(res != null ? $"pojawił się błąd {res.Message}" : "success");
 
         var result = new
@@ -355,8 +356,8 @@ public class HttpMaster
                     return acc;
                 }), // taki brzydki fold i w sumie to pewnie mniej wydajny
                 workingTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - startTime,
-                friendNodeCount = sender.GetIps().Count,
-                friendNode = sender.GetIps()
+                friendNodeCount = sender.getIpMaster().GetIps().Count,
+                friendNode = sender.getIpMaster().GetIps()
             }
         });
     }

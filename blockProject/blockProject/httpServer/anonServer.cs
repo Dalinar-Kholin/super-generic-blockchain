@@ -1,4 +1,5 @@
 using blockProject.blockchain;
+using blockProject.blockchain.genericBlockchain;
 using Microsoft.AspNetCore.Http;
 
 namespace blockProject.httpServer;

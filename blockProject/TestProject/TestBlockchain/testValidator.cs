@@ -1,4 +1,5 @@
 using blockProject.blockchain;
+using blockProject.blockchain.genericBlockchain;
 using blockProject.nodeCommunicatio;
 using blockProject.randomSrc;
 
