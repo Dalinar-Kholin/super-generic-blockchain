@@ -25,15 +25,29 @@ public class NodeCommunicationSupervisor
         Task.WaitAll(tasks);
         foreach (var t in tasks)
         {
+            
             if (t.Result.err != null)
             {
                 hashmap[t.Result.ip] += 1;
-                if (hashmap[t.Result.ip] >= 5)
+                if (hashmap[t.Result.ip] >= 3)
                 {
-                    _sender.getIpMaster().AddBlackList(t.Result.ip);
+                    var im = _sender.getIpMaster();
+                    im.delIps(t.Result.ip);
+                    im.AddBlackList(t.Result.ip);
+                    BlackListed.Add(t.Result.ip);
                 }
             }
-            else hashmap[t.Result.ip] = 0;
+            else
+            {
+                if (BlackListed.Contains(t.Result.ip))
+                {
+                    var im = _sender.getIpMaster();
+                    im.delBlacklisted(t.Result.ip);
+                    im.AddIP(t.Result.ip);
+                    BlackListed.Remove(t.Result.ip);
+                }
+                hashmap[t.Result.ip] = 0;
+            }
         }
     }
 
@@ -47,7 +61,7 @@ public class NodeCommunicationSupervisor
         while (true)
         {
             doWork();
-            await Task.Delay(5_000);
+            await Task.Delay(1_000);
         }
         
     }

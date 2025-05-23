@@ -36,6 +36,10 @@ public class IPMaster
     {
         BlackListed.Add(ip);
     }
+    public void delBlacklisted(IPEndPoint ip)
+    {
+        BlackListed.Remove(ip);
+    }
     
     public void AddIP(IPEndPoint ip)
     {
@@ -148,10 +152,11 @@ public class DataSender
     public async Task<(Error?, IPEndPoint)> pingNode(IPEndPoint ip)
     {
             using TcpClient client = new();
-            await client.ConnectAsync(ip);
-            await using var stream = client.GetStream();
             try
             {
+                await client.ConnectAsync(ip);
+                await using var stream = client.GetStream();
+            
                 var data = JsonConvert.SerializeObject(new Frame(Requests.CONNECTION_PING, JToken.FromObject("")));
                 var bytes = Encoding.UTF8.GetBytes(data);
                 await stream.WriteAsync(bytes, 0, bytes.Length);

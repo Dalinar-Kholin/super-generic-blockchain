@@ -14,15 +14,37 @@ public class Listener
     private readonly IBlockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
     private readonly int _port;
     private readonly DataSender _sender = new();
+    private TcpListener lis;
 
     public Listener(int port)
     {
         _port = port;
     }
 
+    public void Abort()
+    {
+        // casue a exception in doWork function
+        lis.Stop();
+    }
+
+
     public async void Start()
     {
-        var lis = new TcpListener(IPAddress.Any, _port);
+        try
+        {
+            await doWork();
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine("aborted");
+            //ignore
+        }
+    }
+    
+    
+    public async Task doWork()
+    {
+        lis = new TcpListener(IPAddress.Any, _port);
         lis.Start(4096); // startujemy nasłuchiwanie z  max kolejką połączeń 4096
         while (true)
         {
@@ -44,7 +66,6 @@ public class Listener
 
                     if (receivedJson == null)
                     {
-                        Console.WriteLine("połączenie zakończone\n");
                         break;
                     }
 
