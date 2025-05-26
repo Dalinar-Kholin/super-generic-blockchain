@@ -8,7 +8,7 @@ namespace blockProject.blockchain;
 
 public class BlockHeader
 {
-    public BlockHeader(){}
+    public BlockHeader() { }
     public string PreviousHash { get; set; } = "";
     public string Hash { get; set; } = ""; // first 3 byte should be 0x0
     public string DataHash { get; set; } = ""; // block body hash
@@ -18,8 +18,8 @@ public class BlockHeader
 
 public class BlockBody
 {
-    public BlockBody(){}
-    public byte[] Records { get; set; } = {};
+    public BlockBody() { }
+    public byte[] Records { get; set; } = { };
 }
 
 
@@ -29,7 +29,7 @@ public class Block
     public BlockBody body = new BlockBody();
     // hashes nonces 
     public BlockHeader header = new BlockHeader();
-    
+
     [JsonConstructor]
     public Block() { }
 
@@ -37,8 +37,8 @@ public class Block
     {
         header.PreviousHash = previousHash;
     }
-    
-    
+
+
     public int AddRecord(byte[] record)
     {
         byte[] combined = new byte[record.Length + body.Records.Length];
