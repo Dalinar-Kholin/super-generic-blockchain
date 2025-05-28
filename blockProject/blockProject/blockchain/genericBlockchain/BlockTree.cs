@@ -1,4 +1,4 @@
-namespace blockProject.blockchain.genericBlockchain;
+//namespace blockProject.blockchain.genericBlockchain;
 
 public struct TreeHeader
 {
@@ -44,7 +44,7 @@ public class BlockNode
         if (_header.Hash == Hash)
         {
             List<TreeHeader> path = new List<TreeHeader>();
-            path.Add(_header);
+            path.Insert(0, _header);
             return path;
         }
         foreach (var child in _childrens)
@@ -52,7 +52,7 @@ public class BlockNode
             var path = child.GetPath(Hash);
             if (path.Count > 0)
             {
-                path.Add(_header);
+                path.Insert(0, _header);
                 return path;
             }
         }
@@ -159,8 +159,8 @@ public class BlockNode
     }
 };
 
-
 /*
+
 // testy
 
 var root = new BlockNode();
@@ -389,7 +389,7 @@ root.AddChild(child31);
 Console.WriteLine($"Root Depth: {root._depth}");
 Console.WriteLine($"Furthest Node: {root._furthestNode} at depth {root._depth}");
 Console.WriteLine($"Second Furthest Node: {root._secondFurthestNode} at depth {root._secondDepth}");
-foreach (var item in root.GetPath("31"))
+foreach (var item in root.GetPath("28"))
 {
     Console.WriteLine(item.Hash);
 }

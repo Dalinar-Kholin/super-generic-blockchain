@@ -35,12 +35,7 @@ public class Blockchain
             List<TreeHeader> hashes = _blockTree.GetPath(_blockTree._furthestNode); // returns a list of headers from the longest path in the tree
 
             _blockTree = new BlockNode(); // resetting the block tree
-            int numberOfStartingBlocks = 3; // leaving the last 3 blocks in the tree
-            for (int i = numberOfStartingBlocks - 1; i >= 0; i++)
-            {
-                _blockTree.AddChild(new BlockNode(hashes[i]));
-            }
-            for (int i = hashes.Count - 1; i >= numberOfStartingBlocks; i--)
+            for (int i = 0; i < hashes.Count; i++)
             {
                 // we look for a block with DataHash hashes[i].DataHash in the dictionary and take the block with the appropriate hash
                 foreach (var block in _blockDict[hashes[i].DataHash])
@@ -56,7 +51,7 @@ public class Blockchain
                 }
             }
 
-            // we don't know what to do with the rest of the blocks yet (there is unused data in the dictionary)
+            // reszte DataHash z _blockDict trzeba dodac (jakoś uporządkowane) do kolejki (trzeba ja zaimplementowac) i stworzyć nowe bloki odrazu dodając je do chaina
             // TODO
         }
     }
