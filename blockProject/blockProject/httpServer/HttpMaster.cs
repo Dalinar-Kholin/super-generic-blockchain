@@ -1,5 +1,6 @@
 using System.Buffers.Text;
 using System.Net;
+using System.Net.Mime;
 using System.Text;
 using blockProject.blockchain;
 using blockProject.blockchain.genericBlockchain;
@@ -184,7 +185,8 @@ public class HttpMaster
                 {
                     var index = FindNthIndex(data, 8, 0x0);
                     if (index == -1) break;
-                    byte[] part = data.Take(index).ToArray(); // extract segment as byte[]
+                    byte[] part = data.Take(index+1).ToArray(); // extract segment as byte[]
+                    Console.WriteLine($"essa {Encoding.UTF8.GetString(part)}");
                     records.Add(new messageRecord(part));
 
                     // Update data, skipping fragment and separator
