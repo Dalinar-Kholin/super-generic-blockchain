@@ -65,7 +65,8 @@ public class Blockchain
         {
             Hash = block.header.Hash,
             DataHash = block.header.DataHash,
-            PreviousHash = block.header.PreviousHash
+            PreviousHash = block.header.PreviousHash,
+            Nonce = block.header.Nonce
         };
 
         // if block with this DataHash already exists, we add it to the list of blocks with this DataHash
@@ -121,7 +122,7 @@ public class Blockchain
         block.header.DataHash = validator.calcDataHash(block);
 
         //chain.Add(block);
-        AddBlockToTree(newestBlock);
+        AddBlockToTree(block);
 
         _mutex.ReleaseMutex();
     }
@@ -138,7 +139,7 @@ public class Blockchain
         }
 
         //chain.Add(block);
-        AddBlockToTree(newestBlock);
+        AddBlockToTree(block);
 
         _mutex.ReleaseMutex();
     }
@@ -173,6 +174,7 @@ public class Blockchain
     }
 
     // returns list of blocks from chain + blocks from longest branch of the tree
+    // nie wiem czy moze to tak być bo zwracamy możliwe rozwidlenie ale nie pewne (narazie jest to wprowadzone w celu spelnienia testow)
     public List<BlockType> GetChain()
     {
         //return chain;

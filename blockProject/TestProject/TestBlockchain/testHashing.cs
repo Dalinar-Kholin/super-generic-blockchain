@@ -10,24 +10,24 @@ namespace TestProject.TestBlockchain;
 public class testHashing
 {
     [Trait("cat", "genBlock")]
-    //[Fact]
-    internal void generateBlockchain()
+    [Fact]
+    public void generateBlockchain()
     {
         using var sender = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP521);
         var keys = new Keys(sender.ExportECPrivateKey(), sender.ExportSubjectPublicKeyInfo());
-        
+
         using var sender2 = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP521);
         var keys2 = new Keys(sender2.ExportECPrivateKey(), sender2.ExportSubjectPublicKeyInfo());
-        
-        
+
+
         using var sender3 = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP521);
         var keys3 = new Keys(sender3.ExportECPrivateKey(), sender3.ExportSubjectPublicKeyInfo());
-        
+
         using var sender4 = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP521);
         var keys4 = new Keys(sender4.ExportECPrivateKey(), sender4.ExportSubjectPublicKeyInfo());
-        
-        
-        
+
+
+
         var block = new Block("0x0");
         block.AddRecord(testHelper.getRandomDummyRecord().toByte());
         block.AddRecord(testHelper.getRandomDummyRecord().toByte());
@@ -46,12 +46,12 @@ public class testHashing
         blockchain.CreateBlock(block1);
         block1 = new Block(block1.header.Hash);
         block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
-        block1.AddRecord(new messageRecord( Convert.ToBase64String(keys2.PublicKey), Encoding.ASCII.GetBytes("ale mamm esse"), keys).toByte());
-        block1.AddRecord(new messageRecord( Convert.ToBase64String(keys3.PublicKey), Encoding.ASCII.GetBytes("juz nie mam essy"), keys).toByte());
+        block1.AddRecord(new messageRecord(Convert.ToBase64String(keys2.PublicKey), Encoding.ASCII.GetBytes("ale mamm esse"), keys).toByte());
+        block1.AddRecord(new messageRecord(Convert.ToBase64String(keys3.PublicKey), Encoding.ASCII.GetBytes("juz nie mam essy"), keys).toByte());
         blockchain.CreateBlock(block1);
         block1 = new Block(block1.header.Hash);
         block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
-        block1.AddRecord(new messageRecord( Convert.ToBase64String(keys4.PublicKey), Encoding.ASCII.GetBytes("ale mam essa znowu"), keys2).toByte());
+        block1.AddRecord(new messageRecord(Convert.ToBase64String(keys4.PublicKey), Encoding.ASCII.GetBytes("ale mam essa znowu"), keys2).toByte());
         blockchain.CreateBlock(block1);
         block1 = new Block(block1.header.Hash);
         block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
