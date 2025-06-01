@@ -82,7 +82,7 @@ public class DataSender
                 var bytes = Encoding.UTF8.GetBytes(data);
                 await stream.WriteAsync(bytes);
 
-                var buffer = new byte[1_024];
+                var buffer = new byte[262_144];
                 var readed = await stream.ReadAsync(buffer);
                 var result = Encoding.UTF8.GetString(buffer, 0, readed);
                 var json = JsonConvert.DeserializeObject<Frame>(result);
@@ -120,10 +120,11 @@ public class DataSender
                 //TODO: change it so that there is no problem with sending large blockchains
 
                 var buffer =
-                    new byte[16_384];
+                    new byte[262_144];
 
                 var readed = await stream.ReadAsync(buffer);
                 var result = Encoding.UTF8.GetString(buffer, 0, readed);
+                
                 var json = JsonConvert.DeserializeObject<Frame>(result);
                 if (json is { Request: Requests.GET_BLOCKCHAIN })
                 {
@@ -160,7 +161,7 @@ public class DataSender
                 var data = JsonConvert.SerializeObject(new Frame(Requests.CONNECTION_PING, JToken.FromObject("")));
                 var bytes = Encoding.UTF8.GetBytes(data);
                 await stream.WriteAsync(bytes, 0, bytes.Length);
-                var buffer = new byte[1_024];
+                var buffer = new byte[262_144];
                 var readed = await stream.ReadAsync(buffer);
                 var result = Encoding.UTF8.GetString(buffer, 0, readed);
                 var jsonObject = JsonConvert.DeserializeObject<Frame>(result);
@@ -186,7 +187,7 @@ public class DataSender
                 var data = JsonConvert.SerializeObject(new Frame(Requests.CONNECTION_PING, JToken.FromObject("")));
                 var bytes = Encoding.UTF8.GetBytes(data);
                 await stream.WriteAsync(bytes, 0, bytes.Length);
-                var buffer = new byte[1_024];
+                var buffer = new byte[262_144];
                 var readed = await stream.ReadAsync(buffer);
                 var result = Encoding.UTF8.GetString(buffer, 0, readed);
                 var jsonObject = JsonConvert.DeserializeObject<Frame>(result);

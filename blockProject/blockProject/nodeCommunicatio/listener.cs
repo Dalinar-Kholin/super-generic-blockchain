@@ -59,7 +59,7 @@ public class Listener
                 while (true)
                 {
                     // jakoś tutaj powinna odbyć się obsługa komunikacji z klientem, odwołujemy się do Mastera
-                    var buffer = new byte[1_024];
+                    var buffer = new byte[262_144];
                     var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
                     var body = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                     var receivedJson = JsonConvert.DeserializeObject<Frame>(body);

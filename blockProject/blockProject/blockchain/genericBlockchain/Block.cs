@@ -9,6 +9,8 @@ namespace blockProject.blockchain;
 public class BlockHeader
 {
     public BlockHeader() { }
+    
+    public byte[] miner { get; set; } = [];
     public string PreviousHash { get; set; } = "";
     public string Hash { get; set; } = ""; // first 3 byte should be 0x0
     public string DataHash { get; set; } = ""; // block body hash

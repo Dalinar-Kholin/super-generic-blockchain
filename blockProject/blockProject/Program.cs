@@ -16,6 +16,25 @@ internal class Program
     {
         var port = int.Parse(args[0]);
 
+        //ładowanie kluczy servera
+        string privateKey = File.ReadAllText(args[1]);
+        var ecdsaPrivate = ECDsa.Create();
+        
+        ecdsaPrivate.ImportFromPem(privateKey);
+        
+        var messageBytes = RandomNumberGenerator.GetBytes(64);
+
+        byte[] signature = ecdsaPrivate.SignData(messageBytes, HashAlgorithmName.SHA256);
+        bool isValid = ecdsaPrivate.VerifyData(messageBytes, signature, HashAlgorithmName.SHA256);
+        
+        if (!isValid)
+        {
+            throw new Exception("bad keys");
+        }
+        
+        var keys = new Keys(ecdsaPrivate.ExportECPrivateKey(), ecdsaPrivate.ExportSubjectPublicKeyInfo());
+
+        JsonKeyMaster.loadServerKeys(keys);
         // blockchain initialization 
         var dh = singleFileBlockchainDataHandler.GetInstance();
         JsonKeyMaster.path = ".KeyFile";

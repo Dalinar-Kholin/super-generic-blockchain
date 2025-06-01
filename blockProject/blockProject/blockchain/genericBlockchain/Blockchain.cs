@@ -1,3 +1,4 @@
+using blockProject.httpServer;
 using blockProject.nodeCommunicatio;
 using Newtonsoft.Json;
 
@@ -27,6 +28,8 @@ public class Blockchain
     private Dictionary<string, List<BlockType>> _blockDict = new();
 
 
+
+    
     // shortening the tree when possible (one of the branches is 5 blocks ahead of the others)
     private void DelateForks()
     {
@@ -102,8 +105,13 @@ public class Blockchain
 
             newBlock.header.DataHash = validator.calcDataHash(newBlock);
             newBlock.header.Hash = validator.calcHash(newBlock);
-
-            //chain.Add(newestBlock);
+            
+            
+            newBlock.header.miner = JsonKeyMaster.getServerPublicKey();
+            
+            // todo:
+            // pierwszym rekordem danyhc powinien być rekord
+            // przesyłający sumę opłat za wykopanie z konta 0x0 na konto kopacza
             AddBlockToTree(newestBlock);
 
             newestBlock = new BlockType();

@@ -24,10 +24,12 @@ public class messageRecord
     public byte[] message { get; set; } = { }; // will be encrypted so have to be in byte
     public byte[] sign { get; set; } = { }; // signature
     public bool isEncoded { get; set; }
+    public float fee { get; set; } //
+    public byte[] feeSign { get; set; } //
 
     [JsonConstructor]
     public messageRecord(Guid id, string from, string to, byte[] tag, byte[] iv, byte[] message, byte[] sign,
-        bool isEncoded)
+        bool isEncoded, float fee, byte[] feeSign)
     {
         this.id = id;
         this.from = from;
@@ -37,11 +39,13 @@ public class messageRecord
         this.message = message;
         this.sign = sign;
         this.isEncoded = isEncoded;
+        this.feeSign = feeSign;
+        this.fee = fee;
     }
 
 
     //to is reciver public key encoded in base64
-    public messageRecord(string t, byte[] m, Keys keys, bool iE = true)
+    public messageRecord(string t, byte[] m, Keys keys, float fee, bool iE = true)
     {
         id = Guid.NewGuid();
         from = Convert.ToBase64String(keys.PublicKey);
@@ -70,10 +74,12 @@ public class messageRecord
         {
             message = m;
         }
-
         using var ecdsaPrivate = ECDsa.Create();
         ecdsaPrivate.ImportECPrivateKey(senderPrivateKey, out _);
 
+        this.fee = fee;
+        feeSign = ecdsaPrivate.SignData(BitConverter.GetBytes(fee), HashAlgorithmName.SHA256);
+        
         sign = ecdsaPrivate.SignData(message, HashAlgorithmName.SHA256);
         isEncoded = iE;
 
@@ -126,7 +132,9 @@ public class messageRecord
             part => iv = Convert.FromBase64String(Encoding.UTF8.GetString(part)),
             part => message = Convert.FromBase64String(Encoding.UTF8.GetString(part)),
             part => sign = Convert.FromBase64String(Encoding.UTF8.GetString(part)),
-            part => isEncoded = part[0] == 0x01
+            part => { fee = BitConverter.ToSingle(Convert.FromBase64String(Encoding.UTF8.GetString(part)), 0); },
+            part => feeSign = Convert.FromBase64String(Encoding.UTF8.GetString(part)),
+            part => isEncoded = part[0] == 0x01,
         };
         // dumping message into byte
         foreach (var setter in tab)
@@ -152,8 +160,9 @@ public class messageRecord
         var baseIv = Convert.ToBase64String(iv);
         var baseMessage = Convert.ToBase64String(message);
         var baseSign = Convert.ToBase64String(sign);
-
-
+        var baseFee = Convert.ToBase64String(BitConverter.GetBytes(fee));
+        var baseFeeSing = Convert.ToBase64String(feeSign);
+        
         var byteLength = baseId.Length + 1 +
                          baseFrom.Length + 1 /*one extra space for 0x0 byte to separate fileds*/ +
                          /*additionaly we cant allow field to have 0x0 byte insite so we have to base Encoded all fields*/
@@ -162,11 +171,13 @@ public class messageRecord
                          baseIv.Length + 1 +
                          baseMessage.Length + 1 +
                          baseSign.Length + 1 +
-                         1/*is eco*/ + 1;
+                         baseFee.Length + 1 +
+                         baseFeeSing.Length + 1 +
+                         1/*is ecoded*/ + 1;
         byte[] res = new byte[byteLength];
         var offset = 0;
 
-        var sourceTab = new[] { baseId, baseFrom, baseTo, baseTag, baseIv, baseMessage, baseSign };
+        var sourceTab = new[] { baseId, baseFrom, baseTo, baseTag, baseIv, baseMessage, baseSign, baseFee, baseFeeSing };
 
         foreach (var str in sourceTab)
         {

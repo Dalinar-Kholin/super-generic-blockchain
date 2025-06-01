@@ -1,6 +1,4 @@
-using System.Buffers.Text;
 using System.Net;
-using System.Net.Mime;
 using System.Text;
 using blockProject.blockchain;
 using blockProject.blockchain.genericBlockchain;
@@ -112,32 +110,7 @@ public class HttpMaster
     {
         this.sender = sender;
     }
-
-    // sending block to other nodes
-    public async Task SendBlock(HttpContext context)
-    {
-        // tutaj jest chyba więcej logiki do dodania
-
-        var errorResult = await sender.SendData(Blockchain.GetInstance().newestBlock);
-
-        if (errorResult != null)
-        {
-            Console.WriteLine($"Error: {errorResult.Message}");
-            await context.Response.WriteAsJsonAsync(new
-            {
-                success = false,
-                result = errorResult.Message
-            });
-            return;
-        }
-
-        await context.Response.WriteAsJsonAsync(new
-        {
-            success = true,
-            result = "Block sent successfully"
-        });
-    }
-
+    
 
     public async Task GetMessages(HttpContext context)
     {
@@ -185,7 +158,7 @@ public class HttpMaster
                 {
                     var index = FindNthIndex(data, 8, 0x0);
                     if (index == -1) break;
-                    byte[] part = data.Take(index+1).ToArray(); // extract segment as byte[]
+                    byte[] part = data.Take(index+1).ToArray(); // parser expect separator at the end
                     Console.WriteLine($"essa {Encoding.UTF8.GetString(part)}");
                     records.Add(new messageRecord(part));
 
@@ -197,9 +170,6 @@ public class HttpMaster
                 {
                     if (r.to == Convert.ToBase64String(res.keys.PublicKey))
                     {
-                        // todo: decrypting the message
-
-
                         accumulate.Add(r.decrypt(res.keys));
                     }
                     return null!;
@@ -284,7 +254,7 @@ public class HttpMaster
     // zapytanie curl -X POST http://<ip>:<port>/api/addRecord -d '{Key: "data", Value: "data"}'
     // powinno zwrócić JSON {"result" : "success"}
     // TODO: do przetestowania automatycznego
-    public record recivedRecordData(string to, string message, bool shouldBeEncrypted);
+    public record recivedRecordData(string to, string message, bool shouldBeEncrypted, float fee);
 
     public async Task AddRecord(HttpContext context)
     {
@@ -314,7 +284,7 @@ public class HttpMaster
         }
 
 
-        var rec = block.AddRecord(new recordType(record.to, Encoding.ASCII.GetBytes(record.message), res.keys, record.shouldBeEncrypted).toByte());
+        var rec = block.AddRecord(new recordType(record.to, Encoding.ASCII.GetBytes(record.message), res.keys,record.fee ,record.shouldBeEncrypted).toByte());
 
 
         Console.WriteLine($"wartość rekordu: {record}");

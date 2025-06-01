@@ -17,7 +17,7 @@ public class testRecordEncoding
         var message = "chujdupa";
 
         var keys = new Keys(receiverPrivateKey, receiverPublicKey);
-        var record = new recordType(Convert.ToBase64String(receiverPublicKey), Encoding.ASCII.GetBytes(message),keys);
+        var record = new recordType(Convert.ToBase64String(receiverPublicKey), Encoding.ASCII.GetBytes(message),keys,0.10f);
 
         var decryptedMessage  = record.decrypt(keys);
         Assert.Equal(message, decryptedMessage.message);
@@ -43,8 +43,20 @@ public class testRecordEncoding
         
         byte[] receiverPublicKey = receiver.ExportSubjectPublicKeyInfo();
 
-        var messageRecord = new recordType(Convert.ToBase64String(receiverPublicKey), Encoding.ASCII.GetBytes("pojebaneoasdghfjhasdfjhvasdiofbasldskgfgahdbfoiajds;flkahflu gyeahrljghaoiusdfh"), new Keys(senderPrivateKey, senderPublicKey), false);
+        var messageRecord = new recordType(Convert.ToBase64String(receiverPublicKey), Encoding.ASCII.GetBytes("pojebaneoasdghfjhasdfjhvasdiofbasldskgfgahdbfoiajds;flkahflu gyeahrljghaoiusdfh"), new Keys(senderPrivateKey, senderPublicKey), 0.10f,false);
         
+        using var ecdsaPublic = ECDsa.Create();
+        ecdsaPublic.ImportSubjectPublicKeyInfo(senderPublicKey, out _);
+
+        bool isValid = ecdsaPublic.VerifyData(BitConverter.GetBytes(messageRecord.fee), messageRecord.feeSign, HashAlgorithmName.SHA256);
+        Console.WriteLine($"fee {messageRecord.fee}");
+        Assert.Equal(0.10f, messageRecord.fee);
+        if (!isValid)
+        {
+            throw new Exception("bad sign");
+        }
+
+
         Assert.Equal(messageRecord.message, new recordType(messageRecord.toByte()).message);
         
         Assert.Null(messageRecord.validate(Convert.ToBase64String(senderPublicKey)));

@@ -35,9 +35,21 @@ public class JsonKeyMaster : IKeyMaster
     public static string path = "../../../../blockProject/.KeyFile"; // ".KeyFile"; // path to key file for now JSON
     private static Mutex _mut = new();
 
+    private static Keys serverKeys = new Keys([], []);
     // cashe of our keys
     private static Dictionary<string, Keys> hashMap = new();
 
+    public static byte[] getServerPublicKey()
+    {
+        return serverKeys.PublicKey;
+    }
+
+    public static Error? loadServerKeys(Keys keys)
+    {
+        serverKeys = keys;
+        return null;
+    }
+    
     public (string uuid, Error?) loadKeys(string username, string password)
     {
         _mut.WaitOne();

@@ -23,6 +23,6 @@ public class testHelper
         byte[] receiverPrivateKey = receiver.ExportECPrivateKey();
         byte[] receiverPublicKey = receiver.ExportSubjectPublicKeyInfo();
         
-        return new recordType("0x0", Encoding.ASCII.GetBytes("pojebaneoasdghfjhasdfjhvasdiofbasldskgfgahdbfoiajds;flkahflu gyeahrljghaoiusdfh"), new Keys(receiverPrivateKey, receiverPublicKey), false);
+        return new recordType("0x0", Encoding.ASCII.GetBytes("pojebaneoasdghfjhasdfjhvasdiofbasldskgfgahdbfoiajds;flkahflu gyeahrljghaoiusdfh"), new Keys(receiverPrivateKey, receiverPublicKey), 0.10f,false);
     }
 }
