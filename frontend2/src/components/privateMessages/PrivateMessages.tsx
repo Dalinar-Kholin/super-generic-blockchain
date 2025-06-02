@@ -1,11 +1,29 @@
 'use client'
+import { useEffect, useState } from 'react'
+import { getPrivateMessages } from '@/utils/functions'
 import c from './PrivateMessages.module.scss'
 
+interface Message {
+	id: number
+	from: string
+	text: string
+}
+
 export default function PrivateMessages() {
-	const msgs = [
-		{ id: 1, from: '0xFriend', text: '🤫 secret msg' },
-		{ id: 2, from: '0xSelf', text: 'my private note' },
-	]
+	const [msgs, setMsgs] = useState<Message[]>([])
+
+	useEffect(() => {
+		const fetchMessages = async () => {
+			try {
+				const data = await getPrivateMessages()
+				setMsgs(data.messages ?? [])
+			} catch (err) {
+				console.error('❌ Failed to fetch private messages:', err)
+			}
+		}
+
+		fetchMessages()
+	}, [])
 
 	return (
 		<ul className={c.list}>

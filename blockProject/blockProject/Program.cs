@@ -60,7 +60,7 @@ internal class Program
             options.AddPolicy("AllowFrontend", policy =>
             {
                 policy
-                    .WithOrigins("http://localhost:3000")
+                    .WithOrigins("http://127.0.0.1:3000")
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials();
@@ -87,6 +87,7 @@ internal class Program
         api.AddEndpointFilter(async (context, next) =>
         {
             var cookie = context.HttpContext.Request.Cookies["uuid"];
+            Console.WriteLine($"🧁 UUID Cookie: {cookie}");
             if (cookie == null)
             {
                 context.HttpContext.Response.StatusCode = 403;
