@@ -15,9 +15,9 @@ public class testHashing
     {
         string privateKey = File.ReadAllText("/home/dalinarkholin/Uczelnia/nokiaProject/super-generic-blockchain/blockProject/blockProject/p521_key.pem");
         var ecdsaPrivate = ECDsa.Create();
-        
+
         ecdsaPrivate.ImportFromPem(privateKey);
-        
+
         var messageBytes = RandomNumberGenerator.GetBytes(64);
 
         byte[] signature = ecdsaPrivate.SignData(messageBytes, HashAlgorithmName.SHA256);
@@ -26,26 +26,26 @@ public class testHashing
         {
             throw new Exception("bad keys");
         }
-        
-        
+
+
         JsonKeyMaster.loadServerKeys(new Keys(ecdsaPrivate.ExportECPrivateKey(), ecdsaPrivate.ExportSubjectPublicKeyInfo()));
-        
-        
+
+
         using var sender = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP521);
         var keys = new Keys(sender.ExportECPrivateKey(), sender.ExportSubjectPublicKeyInfo());
-        
+
         using var sender2 = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP521);
         var keys2 = new Keys(sender2.ExportECPrivateKey(), sender2.ExportSubjectPublicKeyInfo());
-        
-        
+
+
         using var sender3 = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP521);
         var keys3 = new Keys(sender3.ExportECPrivateKey(), sender3.ExportSubjectPublicKeyInfo());
-        
+
         using var sender4 = ECDiffieHellman.Create(ECCurve.NamedCurves.nistP521);
         var keys4 = new Keys(sender4.ExportECPrivateKey(), sender4.ExportSubjectPublicKeyInfo());
-        
-        
-        
+
+
+
         var block = Blockchain.GetInstance();
         block.AddRecord(testHelper.getRandomDummyRecord().toByte());
         block.AddRecord(testHelper.getRandomDummyRecord().toByte());
@@ -60,10 +60,10 @@ public class testHashing
         block.AddRecord(testHelper.getRandomDummyRecord().toByte());
         block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
         block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
-        block1.AddRecord(new messageRecord( Convert.ToBase64String(keys2.PublicKey), Encoding.ASCII.GetBytes("ale mamm esse"), keys,0.10f).toByte());
-        block1.AddRecord(new messageRecord( Convert.ToBase64String(keys3.PublicKey), Encoding.ASCII.GetBytes("juz nie mam essy"), keys,0.10f).toByte());
+        block1.AddRecord(new messageRecord(Convert.ToBase64String(keys2.PublicKey), Encoding.ASCII.GetBytes("ale mamm esse"), keys, 0.10f).toByte());
+        block1.AddRecord(new messageRecord(Convert.ToBase64String(keys3.PublicKey), Encoding.ASCII.GetBytes("juz nie mam essy"), keys, 0.10f).toByte());
         block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
-        block1.AddRecord(new messageRecord( Convert.ToBase64String(keys4.PublicKey), Encoding.ASCII.GetBytes("ale mam essa znowu"), keys2,0.10f).toByte());
+        block1.AddRecord(new messageRecord(Convert.ToBase64String(keys4.PublicKey), Encoding.ASCII.GetBytes("ale mam essa znowu"), keys2, 0.10f).toByte());
         block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
         block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
         block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
@@ -74,9 +74,9 @@ public class testHashing
         {
             block1.AddRecord(testHelper.getRandomDummyRecord().toByte());
         }
-        
+
         Console.WriteLine($"blockchain := {block1.GetParsedBlockchain()}");
-        
+
         Blockchain.Reset();
     }
 

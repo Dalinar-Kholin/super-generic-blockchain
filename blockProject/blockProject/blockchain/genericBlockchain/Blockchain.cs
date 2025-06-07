@@ -4,8 +4,6 @@ using Newtonsoft.Json;
 
 namespace blockProject.blockchain.genericBlockchain;
 
-
-
 public class Blockchain
 {
     private static Blockchain? _instance;
@@ -29,7 +27,60 @@ public class Blockchain
 
 
 
-    
+    /*
+        // tworzenie bloków z odrzuconych rekordów (które są w odpowiedniej kolejce)
+        private void CreatWasteBlocks()
+        {
+            // działamy dopóki kolejka nie bedzie pusta a gdy jest niewystarczająca liczba rekordów do stworzenia bloku
+            // to rekordy z waste kolejki wrzucamy do zwykłej
+
+            // tworzymy bloki i odrazu dajemy je do chaina
+            List<byte[]> rejectedRecords = ExtractRecords();
+            while (rejectedRecords.Count >= 3)
+            {
+                BlockType newBlock = new BlockType();
+                newBlock.header.PreviousHash = chain.Count == 0 ? "0" : chain[chain.Count - 1].header.Hash;
+
+                // add records to the block
+                for (int i = 0; i < 3 && rejectedRecords.Count > 0; i++)
+                {
+                    newBlock.AddRecord(rejectedRecords[0]);
+                    rejectedRecords.RemoveAt(0);
+                }
+
+                // calculate hashes
+                newBlock.header.DataHash = validator.calcDataHash(newBlock);
+                newBlock.header.Hash = validator.calcHash(newBlock);
+
+                chain.Add(newBlock);
+            }
+        }
+
+
+            // wyodrębnienie oraz posortowanie rekordów z bloków odrzuconych czyli z _blockDict
+            private List<byte[]> ExtractRecords()
+            {
+                List<byte[]> rejectedRecords = new List<byte[]>();
+
+                // iterujemy po wszystkich blokach w _blockDict
+                foreach (var blockList in _blockDict.Values)
+                {
+                    foreach (var block in blockList)
+                    {
+                        // iterujemy po wszystkich rekordach w bloku
+                        foreach (var record in block.body.Records)
+                        {
+                            rejectedRecords.Add(record);
+                        }
+                    }
+                }
+                _blockDict.Clear();
+                rejectedRecords.Sort();
+
+                return rejectedRecords;
+            }
+            */
+
     // shortening the tree when possible (one of the branches is 5 blocks ahead of the others)
     private void DelateForks()
     {
@@ -43,19 +94,32 @@ public class Blockchain
                 // we look for a block with DataHash hashes[i].DataHash in the dictionary and take the block with the appropriate hash
                 foreach (var block in _blockDict[hashes[i].DataHash])
                 {
+                    // a block with the appropriate hash was found
                     if (block.header.Hash == hashes[i].Hash)
                     {
-                        // a block with the appropriate hash was found
-                        chain.Add(block);
                         // we remove all blocks from _blockDict with DataHash hashes[i].DataHash
                         _blockDict.Remove(hashes[i].DataHash);
+
+                        // adding last block back to _blockTree
+                        if (i == hashes.Count - 1)
+                        {
+                            AddBlockToTree(block);
+                        }
+                        else
+                        {
+                            chain.Add(block);
+                        }
                         break;
                     }
                 }
             }
 
+
             // reszte DataHash z _blockDict trzeba dodac (jakoś uporządkowane) do kolejki (trzeba ja zaimplementowac) i stworzyć nowe bloki odrazu dodając je do chaina
             // TODO
+
+            //CreatWasteBlocks();
+
         }
     }
 
@@ -106,10 +170,9 @@ public class Blockchain
 
             newBlock.header.DataHash = validator.calcDataHash(newBlock);
             newBlock.header.Hash = validator.calcHash(newBlock);
-            
-            
+
             newBlock.header.miner = JsonKeyMaster.getServerPublicKey();
-            
+
             // todo:
             // pierwszym rekordem danyhc powinien być rekord
             // przesyłający sumę opłat za wykopanie z konta 0x0 na konto kopacza
@@ -153,7 +216,7 @@ public class Blockchain
     }
 
     // method for testing purposes
-    public List<BlockType> ExtractingBlocksFromTree()
+    public List<BlockType> ExtractBlocksFromTree()
     {
         _mutex.WaitOne();
         List<TreeHeader> hashes = _blockTree.GetPath(_blockTree._furthestNode);
@@ -186,7 +249,7 @@ public class Blockchain
     public List<BlockType> GetChain()
     {
         //return chain;
-        return ExtractingBlocksFromTree();
+        return ExtractBlocksFromTree();
     }
 
     public void SetChain(List<BlockType> blockchain)
