@@ -73,7 +73,7 @@ public class TestHelper
         auth.MapPost("/register", loginMaster.addUser);
 
         var anonServer = new anonServer();
-        anon.MapGet("/getMessages", anonServer.getMessages);
+        anon.MapGet("/getMessages", anonServer.GetMessages);
         return app;
     }
 }

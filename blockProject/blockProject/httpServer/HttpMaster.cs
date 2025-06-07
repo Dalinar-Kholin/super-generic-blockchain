@@ -156,7 +156,7 @@ public class HttpMaster
                 List<messageRecord> records = new List<messageRecord>();
                 for (int i = 0; i < 3; i++)
                 {
-                    var index = FindNthIndex(data, 8, 0x0);
+                    var index = FindNthIndex(data, messageRecord.HowMuchVariableInRecord, 0x0);
                     if (index == -1) break;
                     byte[] part = data.Take(index+1).ToArray(); // parser expect separator at the end
                     Console.WriteLine($"essa {Encoding.UTF8.GetString(part)}");

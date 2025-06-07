@@ -6,24 +6,9 @@ namespace blockProject.httpServer;
 
 public class anonServer
 {
-    public async Task getMessages(HttpContext context)
+    public async Task GetMessages(HttpContext context)
     {
         context.Response.ContentType = "application/json";
-        var FindNthIndex = (byte[] data, int occurrence, int toFind) =>
-        {
-            int count = 0;
-            for (int i = 0; i < data.Length; i++)
-            {
-                if (data[i] == toFind)
-                {
-                    count++;
-                    if (count == occurrence)
-                        return i;
-                }
-            }
-
-            return -1; // not found
-        };
 
 
         var res = Blockchain.GetInstance().GetChain().Aggregate(
@@ -33,9 +18,9 @@ public class anonServer
                 List<messageRecord> records = new List<messageRecord>();
                 for (int i = 0; i < 3; i++)
                 {
-                    var index = FindNthIndex(data, 8, 0x0);
+                    var index = FindNthIndex(data, messageRecord.HowMuchVariableInRecord, 0x0);
                     if (index == -1) break;
-                    byte[] part = data.Take(index + 1).ToArray(); // extract segment as byte[]
+                    byte[] part = data.Take(index+1).ToArray(); // extract segment as byte[]
                     records.Add(new messageRecord(part));
 
                     // Update data, skipping fragment and separator
@@ -56,6 +41,21 @@ public class anonServer
             success = true,
             result = res
         });
+        return;
 
+        int FindNthIndex(byte[] data, int occurrence, int toFind)
+        {
+            int count = 0;
+            for (int i = 0; i < data.Length; i++)
+            {
+                if (data[i] == toFind)
+                {
+                    count++;
+                    if (count == occurrence) return i;
+                }
+            }
+
+            return -1; // not found
+        }
     }
 }

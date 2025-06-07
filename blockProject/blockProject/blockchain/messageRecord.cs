@@ -13,7 +13,7 @@ namespace blockProject.blockchain;
 public class messageRecord
 {
     public Guid id;
-
+    
     public string from { get; set; } = "";
 
     public string to { get; set; } = "";
@@ -26,6 +26,9 @@ public class messageRecord
     public bool isEncoded { get; set; }
     public float fee { get; set; } //
     public byte[] feeSign { get; set; } //
+
+    public static int HowMuchVariableInRecord = 10; // how much zero placeholder we need to parse record from chunk of data
+    
 
     [JsonConstructor]
     public messageRecord(Guid id, string from, string to, byte[] tag, byte[] iv, byte[] message, byte[] sign,
@@ -136,6 +139,8 @@ public class messageRecord
             part => feeSign = Convert.FromBase64String(Encoding.UTF8.GetString(part)),
             part => isEncoded = part[0] == 0x01,
         };
+        
+        
         // dumping message into byte
         foreach (var setter in tab)
         {
