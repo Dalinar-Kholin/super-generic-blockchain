@@ -10,6 +10,17 @@ public class Blockchain
     private readonly IBlockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
     private readonly Mutex _mutex = new();
 
+	private int _minedBlocks = 0;
+
+	public int GetMinedBlockCount()
+	{
+		return _minedBlocks;
+	}
+
+	private int _receivedBlocks = 0;
+    private const double DifferenceThresholdPercent = 20.0;
+
+
     private readonly IValidator validator = new Validator();
     private List<BlockType> chain = new();
 
@@ -172,11 +183,12 @@ public class Blockchain
             newBlock.header.Hash = validator.calcHash(newBlock);
 
             newBlock.header.miner = JsonKeyMaster.getServerPublicKey();
-
-            // todo:
-            // pierwszym rekordem danyhc powinien być rekord
-            // przesyłający sumę opłat za wykopanie z konta 0x0 na konto kopacza
-            AddBlockToTree(newestBlock);
+			
+            _minedBlocks++;
+			// todo:
+			// pierwszym rekordem danyhc powinien być rekord
+			// przesyłający sumę opłat za wykopanie z konta 0x0 na konto kopacza
+			AddBlockToTree(newestBlock);
 
             newestBlock = new BlockType();
             return newBlock;
@@ -209,6 +221,8 @@ public class Blockchain
             return;
         }
 
+        _receivedBlocks++;
+       
         //chain.Add(block);
         AddBlockToTree(block);
 
@@ -219,7 +233,7 @@ public class Blockchain
     public List<BlockType> ExtractBlocksFromTree()
     {
         _mutex.WaitOne();
-        List<TreeHeader> hashes = _blockTree.GetPath(_blockTree._furthestNode);
+        List<TreeHeader> hashes = _blockTree.GetPath(_blockTree._furthestNode); 
         if (hashes.Count == 1 && hashes[0].Hash == "")
         {
             // if there is no blocks in tree
@@ -282,7 +296,42 @@ public class Blockchain
     {
         _instance = null;
     }
+
+	public void LogIfDataDifferenceExceedsThreshold()
+	{
+		_mutex.WaitOne();
+		int localBlockCount = ExtractBlocksFromTree().Count;
+		int localRecordCount = ExtractBlocksFromTree().Sum(b => b.body.Records.Count());
+		_mutex.ReleaseMutex();
+
+		if (localBlockCount == 0 || localRecordCount == 0)
+		{
+			Console.WriteLine("[INFO] Local blockchain is empty, skipping difference check.");
+			return;
+		}
+
+		double blockDiff = Math.Abs(_minedBlocks - _receivedBlocks) / (double)(Math.Max(1, _minedBlocks + _receivedBlocks)) * 100.0;
+
+		if (blockDiff >= DifferenceThresholdPercent)
+		{
+			Console.WriteLine($"[WARNING] Block mining/receiving difference exceeds" +
+                $" {DifferenceThresholdPercent}%: {blockDiff:F2}% (mined: {_minedBlocks}, received: {_receivedBlocks})");
+		}
+
+	}
+
+
+	public void ResetCounters()
+	{
+		_mutex.WaitOne();
+		_receivedBlocks = 0;
+		_minedBlocks = 0;
+		_mutex.ReleaseMutex();
+	}
+
+
 }
+
 
 ////klasa do obsługi blockchainu
 //public class Blockchain : IBlockchain
