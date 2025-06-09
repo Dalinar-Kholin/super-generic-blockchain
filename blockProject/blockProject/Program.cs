@@ -7,6 +7,7 @@ using blockProject.nodeCommunicatio;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace blockProject;
 
@@ -57,22 +58,27 @@ internal class Program
         // CORS policy
         builder.Services.AddCors(options =>
         {
-            options.AddPolicy("AllowFrontend", policy =>
+            options.AddPolicy("AllowFrontendWithCreds", policy =>
             {
                 policy
-                    .WithOrigins("http://127.0.0.1:3000")
+                    .WithOrigins("http://127.0.0.1:3000") 
                     .AllowAnyHeader()
                     .AllowAnyMethod()
-                    .AllowCredentials();
+                    .AllowCredentials(); //cookie
             });
         });
+      
 
         var app = builder.Build();
 
         // CORS
-        app.UseCors("AllowFrontend");
+        app.UseCors("AllowFrontendWithCreds");
 
-        app.UseHttpsRedirection();
+
+        if (app.Environment.IsProduction())
+        {
+            app.UseHttpsRedirection(); 
+        }
         app.UseDefaultFiles(); // Szuka index.html automatycznie
         app.UseStaticFiles();
         app.MapFallbackToFile("index.html");

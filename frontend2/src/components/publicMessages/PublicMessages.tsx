@@ -1,12 +1,13 @@
 'use client'
+
 import { useEffect, useState } from 'react'
 import { getPublicMessages } from '@/utils/functions'
 import c from './PublicMessages.module.scss'
 
 interface Message {
-	id: number
 	from: string
-	text: string
+	to: string
+	message: string
 }
 
 export default function PublicMessages() {
@@ -16,7 +17,7 @@ export default function PublicMessages() {
 		const fetchMessages = async () => {
 			try {
 				const data = await getPublicMessages()
-				setMsgs(data.messages ?? [])
+				setMsgs(data.result ?? [])
 			} catch (err) {
 				console.error('❌ Failed to fetch public messages:', err)
 			}
@@ -26,13 +27,18 @@ export default function PublicMessages() {
 	}, [])
 
 	return (
-		<ul className={c.list}>
-			{msgs.map((m) => (
-				<li key={m.id} className={c.item}>
-					<span className={c.from}>{m.from}</span>
-					<span className={c.text}>{m.text}</span>
-				</li>
-			))}
-		</ul>
+		<div className={c.wrapper}>
+			<ul className={c.list}>
+				{msgs.map((m, i) => (
+					<li key={i} className={c.item}>
+						<div className={c.meta}>
+							<span className={c.from}>{m.from}</span>
+							<span className={c.to}>→ {m.to}</span>
+						</div>
+						<div className={c.text}>{m.message}</div>
+					</li>
+				))}
+			</ul>
+		</div>
 	)
 }
