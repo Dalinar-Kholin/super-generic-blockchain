@@ -10,10 +10,10 @@ namespace TestProject.TestBlockchain;
 public class testHashing
 {
     [Trait("cat", "genBlock")]
-    //[Fact]
-    internal void generateBlockchain()
+    [Fact]
+    public void generateBlockchain()
     {
-        string privateKey = File.ReadAllText("/home/dalinarkholin/Uczelnia/nokiaProject/super-generic-blockchain/blockProject/blockProject/p521_key.pem");
+        string privateKey = File.ReadAllText("../../../../blockProject/p521_key.pem");
         var ecdsaPrivate = ECDsa.Create();
 
         ecdsaPrivate.ImportFromPem(privateKey);

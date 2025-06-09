@@ -29,6 +29,7 @@ export const getPublicMessages = async () => {
 	try {
 		const res = await fetch(`${BASE_URL}/anon/getMessages`)
 		const json = await res.json()
+		console.log('public', json)
 		return json
 	} catch (err) {
 		console.error('❌ getPublicMessages error:', err)
@@ -44,7 +45,7 @@ export const getPrivateMessages = async () => {
 		credentials: 'include',
 	})
 	const json = await res.json()
-	console.log(json)
+	console.log('private', json)
 	return json
 }
 
