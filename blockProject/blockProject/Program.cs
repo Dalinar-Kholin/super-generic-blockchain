@@ -20,19 +20,19 @@ internal class Program
         //ładowanie kluczy servera
         string privateKey = File.ReadAllText(args[1]);
         var ecdsaPrivate = ECDsa.Create();
-        
+
         ecdsaPrivate.ImportFromPem(privateKey);
-        
+
         var messageBytes = RandomNumberGenerator.GetBytes(64);
 
         byte[] signature = ecdsaPrivate.SignData(messageBytes, HashAlgorithmName.SHA256);
         bool isValid = ecdsaPrivate.VerifyData(messageBytes, signature, HashAlgorithmName.SHA256);
-        
+
         if (!isValid)
         {
             throw new Exception("bad keys");
         }
-        
+
         var keys = new Keys(ecdsaPrivate.ExportECPrivateKey(), ecdsaPrivate.ExportSubjectPublicKeyInfo());
 
         JsonKeyMaster.loadServerKeys(keys);
@@ -48,11 +48,13 @@ internal class Program
         }
 
         var sender = new DataSender();
+        Blockchain.GetInstance().SetSender(sender);
+
         var httpMaster = new HttpMaster(sender);
         new Thread(new Listener(port).Start).Start(); // start listener for node communication
-        
+
         new Thread(new NodeCommunicationSupervisor(sender).Start).Start(); // menage communication with node
-        
+
         var builder = WebApplication.CreateBuilder();
 
         // CORS policy
@@ -61,13 +63,13 @@ internal class Program
             options.AddPolicy("AllowFrontendWithCreds", policy =>
             {
                 policy
-                    .WithOrigins("http://127.0.0.1:3000") 
+                    .WithOrigins("http://127.0.0.1:3000")
                     .AllowAnyHeader()
                     .AllowAnyMethod()
                     .AllowCredentials(); //cookie
             });
         });
-      
+
 
         var app = builder.Build();
 
@@ -77,7 +79,7 @@ internal class Program
 
         if (app.Environment.IsProduction())
         {
-            app.UseHttpsRedirection(); 
+            app.UseHttpsRedirection();
         }
         app.UseDefaultFiles(); // Szuka index.html automatycznie
         app.UseStaticFiles();

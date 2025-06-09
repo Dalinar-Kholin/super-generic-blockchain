@@ -34,14 +34,14 @@ public class Listener
         {
             await doWork();
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Console.WriteLine("aborted");
             //ignore
         }
     }
-    
-    
+
+
     public async Task doWork()
     {
         lis = new TcpListener(IPAddress.Any, _port);
@@ -82,12 +82,12 @@ public class Listener
                             await stream.WriteAsync(responseBytes);
                             // Console.WriteLine($"Wysłano blockchain {data}");
                             break;
-                        
+
                         case Requests.ADD_RECORD:
 
                             Console.WriteLine($"Otrzymano rekord: {receivedJson.data}");
                             var record = receivedJson.data.ToObject<messageRecord>();
-                            
+
                             if (record != null)
                             {
                                 var err = record.validate(record.from);
@@ -97,7 +97,7 @@ public class Listener
                                     Console.WriteLine("bad signature\n");
                                     break;
                                 }
-                                
+
                                 var addedBlock = Blockchain.GetInstance().AddRecord(record.toByte());
                                 if (addedBlock != null)
                                 {
@@ -112,19 +112,18 @@ public class Listener
                             }
 
                             break;
-                        
+
                         case Requests.ADD_BLOCK:
                             Console.WriteLine($"Otrzymano blok: {receivedJson.data}");
                             var block = receivedJson.data.ToObject<BlockType>()!;
 
-                            // todo: tutaj powinna odbyć się walidacja rekordu, czy jest poprawny, oraz czy już nie występuje w naszej sieci
-
-                            // jakaś walidacja bloku + inne akcje gdyby blok był niepoprawny
-                            // TODO: implementacja tej metody
-                            // dodanie bloku do blockchaina
+                            // dodanie bloku do blockchaina (sprawdzenie czy blok jest juz w blockchainie i walidacja wykonuje sie w AddBlock)
                             Blockchain.GetInstance().AddBlock(block);
-                            //AddToBlockchain(block); // do zaimplementowania
+
+                            // TODO
+                            // zapisanie blockchainu do pliku powinno odbywac sie po skróceniu drzewa
                             _blockchainDataHandler.writeBlock(block); // zapisz blockchain do pliku
+
                             // wysłanie potwierdzenia otrzymania bloku
                             var response = new { Request = Requests.ADD_BLOCK };
                             var jsonResponse = JsonConvert.SerializeObject(response);
@@ -135,7 +134,7 @@ public class Listener
                             _ = _sender.SendData(block, endpoint);
 
                             break;
-                        
+
                         case Requests.CONNECTION_PING:
                             var result = new Frame(Requests.CONNECTION_PING, JToken.FromObject(""));
                             data = JsonConvert.SerializeObject(result);

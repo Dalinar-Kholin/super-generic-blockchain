@@ -58,7 +58,7 @@ public class BlockNode
             _firstNonce = child._header.Nonce;
             _header = child._header;
 
-            Console.WriteLine($"{_header.Hash}: {_depth}, {_furthestNode}, {_firstNonce} | {_secondDepth}, {_secondFurthestNode}, {_secondNonce}");
+            //Console.WriteLine($"{_header.Hash}: {_depth}, {_furthestNode}, {_firstNonce} | {_secondDepth}, {_secondFurthestNode}, {_secondNonce}");
             return (_depth, _furthestNode, _firstNonce, _secondDepth, _secondFurthestNode, _secondNonce);
         }
 
@@ -82,14 +82,14 @@ public class BlockNode
 
             _childrens.Add(child);
 
-            Console.WriteLine($"{_header.Hash}: {_depth}, {_furthestNode}, {_firstNonce} | {_secondDepth}, {_secondFurthestNode}, {_secondNonce}");
+            //Console.WriteLine($"{_header.Hash}: {_depth}, {_furthestNode}, {_firstNonce} | {_secondDepth}, {_secondFurthestNode}, {_secondNonce}");
             return (_depth, _furthestNode, _firstNonce, _secondDepth, _secondFurthestNode, _secondNonce);
         }
 
         // reaching the end of the tree
         if (_childrens.Count == 0)
         {
-            Console.WriteLine($"{_header.Hash}: {_depth}, {_furthestNode}, {_firstNonce} | {_secondDepth}, {_secondFurthestNode}, {_secondNonce}");
+            //Console.WriteLine($"{_header.Hash}: {_depth}, {_furthestNode}, {_firstNonce} | {_secondDepth}, {_secondFurthestNode}, {_secondNonce}");
             return (_depth, _furthestNode, _firstNonce, _secondDepth, _secondFurthestNode, _secondNonce);
         }
 
@@ -142,7 +142,7 @@ public class BlockNode
         _firstNonce = maxNonce;
         _secondNonce = secondMaxNonce;
 
-        Console.WriteLine($"{_header.Hash}: {_depth}, {_furthestNode}, {_firstNonce} | {_secondDepth}, {_secondFurthestNode}, {_secondNonce}");
+        //Console.WriteLine($"{_header.Hash}: {_depth}, {_furthestNode}, {_firstNonce} | {_secondDepth}, {_secondFurthestNode}, {_secondNonce}");
         return (_depth, _furthestNode, _firstNonce, _secondDepth, _secondFurthestNode, _secondNonce);
     }
 };

@@ -110,7 +110,7 @@ public class HttpMaster
     {
         this.sender = sender;
     }
-    
+
 
     public async Task GetMessages(HttpContext context)
     {
@@ -158,7 +158,7 @@ public class HttpMaster
                 {
                     var index = FindNthIndex(data, messageRecord.HowMuchVariableInRecord, 0x0);
                     if (index == -1) break;
-                    byte[] part = data.Take(index+1).ToArray(); // parser expect separator at the end
+                    byte[] part = data.Take(index + 1).ToArray(); // parser expect separator at the end
                     Console.WriteLine($"essa {Encoding.UTF8.GetString(part)}");
                     records.Add(new messageRecord(part));
 
@@ -284,7 +284,7 @@ public class HttpMaster
         }
 
 
-        var rec = block.AddRecord(new recordType(record.to, Encoding.ASCII.GetBytes(record.message), res.keys,record.fee ,record.shouldBeEncrypted).toByte());
+        var rec = block.AddRecord(new recordType(record.to, Encoding.ASCII.GetBytes(record.message), res.keys, record.fee, record.shouldBeEncrypted).toByte());
 
 
         Console.WriteLine($"wartość rekordu: {record}");

@@ -22,7 +22,7 @@ public class IPMaster
     {
         return IPs.Select(ip => ip.ToString()).ToList();
     }
-    
+
     public List<IPEndPoint> getParsed()
     {
         return IPs;
@@ -40,10 +40,10 @@ public class IPMaster
     {
         BlackListed.Remove(ip);
     }
-    
+
     public void AddIP(IPEndPoint ip)
     {
-        
+
         if (BlackListed.FindIndex(x => Equals(x, ip)) != -1) return; // jeżeli jest black listowany wywalamy
         if (IPs.Aggregate(false, (acc, x) => acc ? acc : x.ToString() == ip.ToString()))
             return; // check if we already have such IP on the list
@@ -62,15 +62,17 @@ public class DataSender
     {
         return _ipMaster;
     }
-    
-    
+
+
     public async Task<Error?> SendData<T>(T dataToSend, IPEndPoint? exclude = null)
     {
+        Console.WriteLine($"Attempting to send data");
         if (dataToSend == null) return new Error("empty data");
         var type = typeof(T) == typeof(recordType) ? Requests.ADD_RECORD : Requests.ADD_BLOCK;
         var frame = new Frame(type, JToken.FromObject(dataToSend));
         foreach (var ip in _ipMaster.IPs)
         {
+            Console.WriteLine($"Sending data to {ip}");
             if (exclude != null && ip.Equals(exclude)) continue;
 
             using TcpClient client = new();
@@ -124,7 +126,7 @@ public class DataSender
 
                 var readed = await stream.ReadAsync(buffer);
                 var result = Encoding.UTF8.GetString(buffer, 0, readed);
-                
+
                 var json = JsonConvert.DeserializeObject<Frame>(result);
                 if (json is { Request: Requests.GET_BLOCKCHAIN })
                 {
@@ -148,29 +150,29 @@ public class DataSender
 
         return null;
     }
-    
-    
+
+
     public async Task<(Error?, IPEndPoint)> pingNode(IPEndPoint ip)
     {
-            using TcpClient client = new();
-            try
-            {
-                await client.ConnectAsync(ip);
-                await using var stream = client.GetStream();
-            
-                var data = JsonConvert.SerializeObject(new Frame(Requests.CONNECTION_PING, JToken.FromObject("")));
-                var bytes = Encoding.UTF8.GetBytes(data);
-                await stream.WriteAsync(bytes, 0, bytes.Length);
-                var buffer = new byte[262_144];
-                var readed = await stream.ReadAsync(buffer);
-                var result = Encoding.UTF8.GetString(buffer, 0, readed);
-                var jsonObject = JsonConvert.DeserializeObject<Frame>(result);
-                if (jsonObject?.Request != Requests.CONNECTION_PING) return (new Error("bad server Response"), ip);
-            }
-            catch (Exception e)
-            {
-                return (new Error($"failed to send data: {e}"), ip);
-            }
+        using TcpClient client = new();
+        try
+        {
+            await client.ConnectAsync(ip);
+            await using var stream = client.GetStream();
+
+            var data = JsonConvert.SerializeObject(new Frame(Requests.CONNECTION_PING, JToken.FromObject("")));
+            var bytes = Encoding.UTF8.GetBytes(data);
+            await stream.WriteAsync(bytes, 0, bytes.Length);
+            var buffer = new byte[262_144];
+            var readed = await stream.ReadAsync(buffer);
+            var result = Encoding.UTF8.GetString(buffer, 0, readed);
+            var jsonObject = JsonConvert.DeserializeObject<Frame>(result);
+            if (jsonObject?.Request != Requests.CONNECTION_PING) return (new Error("bad server Response"), ip);
+        }
+        catch (Exception e)
+        {
+            return (new Error($"failed to send data: {e}"), ip);
+        }
 
         return (null, ip);
     }
