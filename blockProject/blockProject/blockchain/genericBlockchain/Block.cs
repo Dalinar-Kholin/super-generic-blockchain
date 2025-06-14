@@ -1,11 +1,9 @@
 ﻿using System.ComponentModel;
 using System.Text;
 using Newtonsoft.Json;
+using System.Runtime.Serialization;
 
 namespace blockProject.blockchain;
-
-
-
 
 public class BlockHeader
 {
@@ -18,6 +16,19 @@ public class BlockHeader
     public int Nonce { get; set; } = 0; // allows hash condition be set
     public int recordsInBlock { get; set; } = 0;
     public List<int> possitionsOfRecords { get; set; } = Enumerable.Repeat(-1, 20).ToList();
+
+    [OnDeserialized]
+    internal void OnDeserializedMethod(StreamingContext context)
+    {
+        if (possitionsOfRecords.Count > 20)
+        {
+            possitionsOfRecords = possitionsOfRecords.Skip(possitionsOfRecords.Count - 20).Take(20).ToList();
+        }
+        else if (possitionsOfRecords.Count < 20)
+        {
+            possitionsOfRecords.AddRange(Enumerable.Repeat(-1, 20 - possitionsOfRecords.Count));
+        }
+    }
 }
 
 public class BlockBody
@@ -77,7 +88,7 @@ public class Block
 
         int start = position == 0 ? 0 : header.possitionsOfRecords[position - 1] + 1;
         int end = header.possitionsOfRecords[position];
-        int length = end - start + 1;  // +1 ponieważ end to indeks ostatniego bajtu
+        int length = end - start + 1;
 
         return new Span<byte>(body.Records, start, length);
     }
@@ -94,8 +105,12 @@ public class Block
     public override string ToString()
     {
         var sb = new StringBuilder();
-        foreach (var v in body.Records) sb.Append(v + "\n");
-
-        return $"{header.Hash} {header.Nonce} {header.DataHash}\n{sb}";
+        //foreach (var v in body.Records) sb.Append(v + "\n");
+        sb.Append(header.Nonce + "\n");
+        sb.Append($"PreviousHash: {header.PreviousHash}\n");
+        foreach (var v in header.possitionsOfRecords) sb.Append(v + "\n");
+        //return $"{header.Hash} {header.Nonce} {header.DataHash}\n{sb}";
+        return sb.ToString();
     }
+
 }

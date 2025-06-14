@@ -118,8 +118,6 @@ public class testRecordPropagation
             Environment.Exit(1);
         }
 
-        Blockchain.GetInstance().SetChain(storedChain);
-
         const int node1Port = 9990;
         const int node2Port = 8880;
         const string node2Ip = "127.0.0.1";
@@ -183,6 +181,8 @@ public class testRecordPropagation
 
             json = JsonConvert.SerializeObject(requestData);
             content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            //Blockchain.GetInstance().DisplayBlockchain();
 
             content = RandomContent();
 
@@ -276,11 +276,6 @@ public class testRecordPropagation
             Blockchain.GetInstance().AddBlockToTree(newBlock);
             Console.WriteLine($"number of blocks after adding block: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
 
-            content = RandomContent();
-            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
-            body5 = await response2.Content.ReadAsStringAsync();
-            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
-            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
 
             content = RandomContent();
             response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
@@ -377,6 +372,15 @@ public class testRecordPropagation
             body5 = await response2.Content.ReadAsStringAsync();
             newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
             Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+
+            //Blockchain.GetInstance().DisplayBlockchain();
             Console.WriteLine($"{Blockchain.GetInstance()._blockTree._depth} {Blockchain.GetInstance()._blockTree._secondDepth}");
         }
 

@@ -40,9 +40,10 @@ public class Blockchain
     private DataSender _sender;
 
 
+
     public async Task HandleWastedBlocks(BlockType rootBlock)
     {
-        var rejectedRecords = ExtractRecords(); // extract and sort records from _blockDict
+        var rejectedRecords = ExtractRecords(); // extract records from _blockDict
         AddBlockToTree(rootBlock);
         Console.WriteLine(rejectedRecords.Count);
 
@@ -52,28 +53,25 @@ public class Blockchain
             rejectedRecords.RemoveAt(0);
             if (a != null)
             {
-                // jezeli stworzylismy blok wysylamy go innym węzłom
+                // if we created a block we send it to other nodes
                 await _sender.SendData(a);
             }
         }
     }
 
-    // wyodrębnienie oraz posortowanie rekordów z bloków odrzuconych czyli z _blockDict
+    // extracting records from rejected blocks from _blockDict
     private List<byte[]> ExtractRecords()
     {
         List<byte[]> rejectedRecords = new List<byte[]>();
 
-        // iterujemy po wszystkich blokach w _blockDict
         foreach (var blockList in _blockDict.Values)
         {
             foreach (var block in blockList)
             {
-                // iterujemy po wszystkich rekordach w bloku
                 for (int i = 0; i < block.header.recordsInBlock; i++)
                 {
                     Span<byte> recordSpan = block.GetRecordSpan(i);
                     byte[] recordArray = recordSpan.ToArray();
-                    // dodajemy rekordy do listy odrzuconych
                     rejectedRecords.Add(recordArray);
                 }
             }
@@ -91,19 +89,16 @@ public class Blockchain
     {
         if (_blockTree._depth >= _blockTree._secondDepth + 5)
         {
-            List<TreeHeader> hashes = _blockTree.GetPath(_blockTree._furthestNode); // returns a list of headers from the longest path in the tree
+            List<TreeHeader> hashes = _blockTree.GetPath(_blockTree._furthestNode); // returns a list of headers from the longest path in the _blockTree
 
-            _blockTree = new BlockNode(); // resetting the block tree
+            _blockTree = new BlockNode();
             var rootBlock = new BlockType(); // the last block that will be added to the tree
             for (int i = 0; i < hashes.Count; i++)
             {
-                // we look for a block with DataHash hashes[i].DataHash in the dictionary and take the block with the appropriate hash
                 foreach (var block in _blockDict[hashes[i].DataHash])
                 {
-                    // a block with the appropriate hash was found
                     if (block.header.Hash == hashes[i].Hash)
                     {
-                        // we remove all blocks from _blockDict with DataHash hashes[i].DataHash
                         _blockDict.Remove(hashes[i].DataHash);
 
                         // adding last block back to _blockTree
@@ -121,7 +116,6 @@ public class Blockchain
             }
 
             HandleWastedBlocks(rootBlock); // handle all records from _blockDict that were not added to the chain
-
         }
     }
 
@@ -129,6 +123,8 @@ public class Blockchain
     public void AddBlockToTree(BlockType block)
     {
         _mutex.WaitOne();
+
+        newestBlock = new BlockType();
 
         // creating a tree header from block header
         TreeHeader treeHeader = new TreeHeader
@@ -154,17 +150,13 @@ public class Blockchain
     // return count of records in blockchain that let us know to create block or not 
     public BlockType? AddRecord(byte[] Record)
     {
-        // TODO poprawic czytanie blockchain z pliku bo zle cos wczytuje po dodaniu positionOfRecords
-        /*
         if (IsRecordInBlockchain(Record))
 
         {
 
             // if record already exists in blockchain we do not add it
-            //_mutex.ReleaseMutex();
             return null;
         }
-    */
 
         var rec = newestBlock.AddRecord(Record);
 
@@ -173,7 +165,7 @@ public class Blockchain
 
             var newBlock = newestBlock;
 
-            // At first, there may be no blocks in the tree
+            // at first there may be no blocks in the tree
             if (_blockTree._furthestNode == "")
             {
                 newBlock.header.PreviousHash = chain.Count == 0 ? "0" : chain[chain.Count - 1].header.Hash;
@@ -190,12 +182,13 @@ public class Blockchain
             newBlock.header.miner = JsonKeyMaster.getServerPublicKey();
 
             _minedBlocks++;
+
             // todo:
             // pierwszym rekordem danyhc powinien być rekord
             // przesyłający sumę opłat za wykopanie z konta 0x0 na konto kopacza
+
             AddBlockToTree(newestBlock);
 
-            newestBlock = new BlockType();
             return newBlock;
         }
 
@@ -218,17 +211,17 @@ public class Blockchain
     {
         _mutex.WaitOne();
 
-        if (IsBlockInBlockchain(block))
-        {
-            // if block already exists in blockchain we do not add it
-            _mutex.ReleaseMutex();
-            return;
-        }
-
         var err = validator.validate(block);
         if (err != null) // if not valid block we reject to include
         {
             Console.WriteLine($"{err.Message}");
+            _mutex.ReleaseMutex();
+            return;
+        }
+
+        if (IsBlockInBlockchain(block))
+        {
+            // if block already exists in blockchain we do not add it
             _mutex.ReleaseMutex();
             return;
         }
@@ -245,7 +238,6 @@ public class Blockchain
     {
         _mutex.WaitOne();
         List<TreeHeader> hashes = _blockTree.GetPath(_blockTree._furthestNode);
-        //Console.WriteLine(_blockTree._furthestNode);
 
         if (hashes.Count == 1 && hashes[0].Hash == "")
         {
@@ -257,12 +249,10 @@ public class Blockchain
         List<BlockType> blocks = new List<BlockType>();
         for (int i = hashes.Count - 1; i >= 0; i--)
         {
-            // we look for a block with DataHash hashes[i].DataHash in the dictionary and take the block with the appropriate hash
             foreach (var block in _blockDict[hashes[i].DataHash])
             {
                 if (block.header.Hash == hashes[i].Hash)
                 {
-                    // a block with the appropriate hash was found
                     blocks.Add(block);
                     break;
                 }
@@ -313,7 +303,7 @@ public class Blockchain
 
     public void SetSender(DataSender sender)
     {
-        this._sender = sender;
+        _sender = sender;
     }
 
     public void LogIfDataDifferenceExceedsThreshold()
@@ -339,7 +329,6 @@ public class Blockchain
 
     }
 
-
     public void ResetCounters()
     {
         _mutex.WaitOne();
@@ -350,43 +339,39 @@ public class Blockchain
 
     private bool IsBlockInBlockchain(BlockType block)
     {
-        //_mutex.WaitOne();
+        _mutex.WaitOne();
 
-        // sprawdzamy czy blok jest juz _blockTree
         if (_blockDict.ContainsKey(block.header.DataHash))
         {
             foreach (var b in _blockDict[block.header.DataHash])
             {
                 if (b.header.Hash == block.header.Hash)
                 {
-                    //_mutex.ReleaseMutex();
+                    _mutex.ReleaseMutex();
                     return true;
                 }
             }
         }
 
-        // sprawdzamy czy blok jest w łańcuchu
         foreach (var b in chain)
         {
             if (b.header.Hash == block.header.Hash)
             {
-                //_mutex.ReleaseMutex();
+                _mutex.ReleaseMutex();
                 return true;
             }
         }
 
-        //_mutex.ReleaseMutex();
+        _mutex.ReleaseMutex();
         return false;
     }
 
-    // sprawdzenie czy rekord jest juz w blokach
     private bool IsRecordInBlockchain(byte[] record)
     {
-        //_mutex.WaitOne();
+        _mutex.WaitOne();
 
         Span<byte> recordSpan = record.AsSpan();
 
-        // sprawdzenei czy rekord jest w newestBlock
         if (newestBlock.header.recordsInBlock > 0)
         {
 
@@ -395,58 +380,56 @@ public class Blockchain
 
                 if (recordSpan.SequenceEqual(newestBlock.GetRecordSpan(i)))
                 {
-                    //_mutex.ReleaseMutex();
-                    Console.WriteLine("a1");
+                    _mutex.ReleaseMutex();
                     return true;
                 }
 
             }
         }
 
-
-        // iterujemy po wszystkich blokach w _blockDict
         foreach (var blockList in _blockDict.Values)
         {
             foreach (var block in blockList)
             {
-                // iterujemy po wszystkich rekordach w bloku
                 int recordCount = block.header.recordsInBlock;
                 for (int i = 0; i < recordCount; i++)
                 {
-
-                    // sprawdzamy czy rekord jest taki sam jak ten w bloku
                     if (recordSpan.SequenceEqual(block.GetRecordSpan(i)))
                     {
-                        Console.WriteLine("a2");
-                        //_mutex.ReleaseMutex();
+                        _mutex.ReleaseMutex();
                         return true;
                     }
-
-
                 }
             }
         }
 
-        // sprawdzamy czy rekord jest w łańcuchu
         foreach (var block in chain)
         {
 
             for (int i = 0; i < block.header.recordsInBlock; i++)
             {
-
-                // sprawdzamy czy rekord jest taki sam jak ten w bloku
-                // TODO naprawic czytanie blockchain z pliku
                 if (recordSpan.SequenceEqual(block.GetRecordSpan(i)))
                 {
-                    //_mutex.ReleaseMutex();
+                    _mutex.ReleaseMutex();
                     return true;
                 }
             }
         }
 
-        //_mutex.ReleaseMutex();
-        Console.WriteLine("b1");
+        _mutex.ReleaseMutex();
         return false;
+    }
+
+    public void DisplayBlockchain()
+    {
+        _mutex.WaitOne();
+        Console.WriteLine("Blockchain:");
+        foreach (var block in chain)
+        {
+            Console.WriteLine(block.ToString());
+            Console.WriteLine("===================================");
+        }
+        _mutex.ReleaseMutex();
     }
 }
 
