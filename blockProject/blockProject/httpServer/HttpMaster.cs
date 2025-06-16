@@ -258,6 +258,7 @@ public class HttpMaster
 
     public async Task AddRecord(HttpContext context)
     {
+        
         context.Response.ContentType = "application/json";
 
         var cookie = context.Request.Cookies["uuid"];
@@ -283,7 +284,10 @@ public class HttpMaster
             return;
         }
 
-
+        if (record.to == "0x0" && record.shouldBeEncrypted)
+        {
+            await context.Response.WriteAsJsonAsync(new { success = false, result = "cant to everyone with encryption" });
+        }
         var rec = block.AddRecord(new recordType(record.to, Encoding.ASCII.GetBytes(record.message), res.keys,record.fee ,record.shouldBeEncrypted).toByte());
 
 
@@ -292,7 +296,8 @@ public class HttpMaster
         if (rec != null)
         {
             singleFileBlockchainDataHandler.GetInstance().writeBlockchain(Blockchain.GetInstance().GetChain());
-            await sender.SendData(rec);
+            var t1 =  sender.SendData(rec);
+            await Task.WhenAll(sender.SendData(record), sender.SendData(rec));
         }
         else
         {

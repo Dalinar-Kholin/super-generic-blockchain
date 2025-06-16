@@ -59,7 +59,7 @@ public class Listener
                 while (true)
                 {
                     // jakoś tutaj powinna odbyć się obsługa komunikacji z klientem, odwołujemy się do Mastera
-                    var buffer = new byte[262_144];
+                    var buffer = new byte[50];
                     var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
                     var body = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                     var receivedJson = JsonConvert.DeserializeObject<Frame>(body);
@@ -69,24 +69,39 @@ public class Listener
                         break;
                     }
 
-                    string data;
-                    byte[] responseBytes;
                     switch (receivedJson.Request)
                     {
                         // zmienić to potem na communication mastera
                         case Requests.GET_BLOCKCHAIN:
-                            var res = new Frame(Requests.GET_BLOCKCHAIN,
-                                JToken.FromObject(Blockchain.GetInstance().GetChain()));
-                            data = JsonConvert.SerializeObject(res);
-                            responseBytes = Encoding.UTF8.GetBytes(data);
-                            await stream.WriteAsync(responseBytes);
-                            // Console.WriteLine($"Wysłano blockchain {data}");
+
+                            var secondToken = 
+                                Encoding.UTF8.GetBytes(
+                                JsonConvert.SerializeObject(
+                                    new SecondFrame(JToken.FromObject(
+                                        Blockchain.GetInstance()
+                                            .GetChain()))));
+                            
+                            var res = new Frame(Requests.GET_BLOCKCHAIN,secondToken.Length);
+                            var BlockhcinData = JsonConvert.SerializeObject(res);
+                            await stream.WriteAsync(Encoding.UTF8.GetBytes(BlockhcinData));
+                            var blockchainBuffer =
+                                new byte[50];
+
+                            await stream.ReadAsync(blockchainBuffer);
+                            
+                            await stream.WriteAsync(secondToken);
                             break;
                         
                         case Requests.ADD_RECORD:
 
-                            Console.WriteLine($"Otrzymano rekord: {receivedJson.data}");
-                            var record = receivedJson.data.ToObject<messageRecord>();
+                            Console.WriteLine($"Otrzymano rekord o długości: {receivedJson.len}");
+                            var frame = new Frame(Requests.ADD_RECORD, 0);
+                            var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(frame));
+                            await stream.WriteAsync(bytes);
+                            var addRecordBuffer = new byte[receivedJson.len];
+                            var readed = Encoding.UTF8.GetString(addRecordBuffer, 0, await stream.ReadAsync(addRecordBuffer));
+                            
+                            var record = JsonConvert.DeserializeObject<SecondFrame>(readed).data.ToObject<messageRecord>();
                             
                             if (record != null)
                             {
@@ -114,8 +129,16 @@ public class Listener
                             break;
                         
                         case Requests.ADD_BLOCK:
-                            Console.WriteLine($"Otrzymano blok: {receivedJson.data}");
-                            var block = receivedJson.data.ToObject<BlockType>()!;
+                            Console.WriteLine($"Otrzymano blok długości: {receivedJson.len}");
+                            
+                            Console.WriteLine($"Otrzymano rekord o długości: {receivedJson.len}");
+                            var addBlockFrame = new Frame(Requests.ADD_RECORD, 0);
+                            
+                            await stream.WriteAsync(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(addBlockFrame)));
+                            
+                            var addBlockBuffer = new byte[receivedJson.len];
+                            var addBlockReaded = Encoding.UTF8.GetString(addBlockBuffer, 0, await stream.ReadAsync(addBlockBuffer));
+                            var block = JsonConvert.DeserializeObject<SecondFrame>(addBlockReaded).data.ToObject<BlockType>()!;
 
                             // todo: tutaj powinna odbyć się walidacja rekordu, czy jest poprawny, oraz czy już nie występuje w naszej sieci
 
@@ -137,10 +160,9 @@ public class Listener
                             break;
                         
                         case Requests.CONNECTION_PING:
-                            var result = new Frame(Requests.CONNECTION_PING, JToken.FromObject(""));
-                            data = JsonConvert.SerializeObject(result);
-                            responseBytes = Encoding.UTF8.GetBytes(data);
-                            await stream.WriteAsync(responseBytes);
+                            var result = new Frame(Requests.CONNECTION_PING, 0);
+                            var connectionData = JsonConvert.SerializeObject(result);
+                            await stream.WriteAsync(Encoding.UTF8.GetBytes(connectionData));
                             break;
                     }
                 }
