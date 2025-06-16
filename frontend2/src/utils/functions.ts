@@ -1,24 +1,16 @@
 const BASE_URL = 'http://127.0.0.1:8071'
 
-const logCookies = (label: string) => {
-	console.log(`🍪 ${label} — document.cookie:`, document.cookie)
-}
-
 // -------------------------
 // AUTH CHECK
 // -------------------------
 export const isAuth = async (): Promise<boolean> => {
-	logCookies('isAuth')
 	try {
 		const r = await fetch(BASE_URL + '/api/getMessages', {
 			credentials: 'include',
 		})
-		console.log('🔐 isAuth response status:', r.status)
 		const d = await r.json()
-		console.log('🔐 isAuth response json:', d)
 		return d.success === true
 	} catch (err) {
-		console.error('❌ isAuth error:', err)
 		return false
 	}
 }
@@ -34,11 +26,10 @@ export const getUsername = (): string => {
 // PUBLIC / ANON ROUTES
 // -------------------------
 export const getPublicMessages = async () => {
-	logCookies('getPublicMessages')
 	try {
 		const res = await fetch(`${BASE_URL}/anon/getMessages`)
 		const json = await res.json()
-		console.log('📨 Public messages:', json)
+		console.log('public', json)
 		return json
 	} catch (err) {
 		console.error('❌ getPublicMessages error:', err)
@@ -50,13 +41,11 @@ export const getPublicMessages = async () => {
 // AUTH ROUTES
 // -------------------------
 export const getPrivateMessages = async () => {
-	logCookies('getPrivateMessages')
 	const res = await fetch(`${BASE_URL}/api/getMessages`, {
 		credentials: 'include',
 	})
-	console.log('📦 Private response status:', res.status)
 	const json = await res.json()
-	console.log('🔒 Private messages:', json)
+	console.log('private', json)
 	return json
 }
 
@@ -69,7 +58,6 @@ export const sendMessage = async ({
 	message: string
 	shouldBeEncrypted: boolean
 }) => {
-	logCookies('sendMessage')
 	const res = await fetch(`${BASE_URL}/api/addRecord`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -90,7 +78,6 @@ export const login = async ({
 	username: string
 	password: string
 }) => {
-	logCookies('login (before)')
 	const res = await fetch(`${BASE_URL}/auth/login`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -99,7 +86,6 @@ export const login = async ({
 	})
 	console.log('🔁 Login response status:', res.status)
 	const json = await res.json()
-	logCookies('login (after)')
 	console.log('✅ Login response:', json)
 	return json
 }
@@ -115,7 +101,6 @@ export const register = async ({
 	privateKey: string
 	publicKey: string
 }) => {
-	logCookies('register')
 	const res = await fetch(`${BASE_URL}/auth/register`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -129,13 +114,11 @@ export const register = async ({
 // SUPERVISOR ROUTES
 // -------------------------
 export const getStats = async () => {
-	logCookies('getStats')
 	const res = await fetch(`${BASE_URL}/supervisor/getStats`)
 	return res.json()
 }
 
 export const getFriendIp = async () => {
-	logCookies('getFriendIp')
 	const res = await fetch(`${BASE_URL}/supervisor/getFriendIp`)
 	return res.json()
 }
@@ -147,7 +130,6 @@ export const addNewNode = async ({
 	ip: string
 	port: number
 }) => {
-	logCookies('addNewNode')
 	const url = new URL(`${BASE_URL}/supervisor/addNewNode`)
 	url.searchParams.append('ip', ip)
 	url.searchParams.append('port', port.toString())

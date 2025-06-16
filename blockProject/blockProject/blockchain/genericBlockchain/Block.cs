@@ -1,11 +1,9 @@
 ﻿using System.ComponentModel;
 using System.Text;
 using Newtonsoft.Json;
+using System.Runtime.Serialization;
 
 namespace blockProject.blockchain;
-
-
-
 
 public class BlockHeader
 {
@@ -18,6 +16,19 @@ public class BlockHeader
     public int Nonce { get; set; } = 0; // allows hash condition be set
     public int recordsInBlock { get; set; } = 0;
     public List<int> possitionsOfRecords { get; set; } = Enumerable.Repeat(-1, 20).ToList();
+
+    [OnDeserialized]
+    internal void OnDeserializedMethod(StreamingContext context)
+    {
+        if (possitionsOfRecords.Count > 20)
+        {
+            possitionsOfRecords = possitionsOfRecords.Skip(possitionsOfRecords.Count - 20).Take(20).ToList();
+        }
+        else if (possitionsOfRecords.Count < 20)
+        {
+            possitionsOfRecords.AddRange(Enumerable.Repeat(-1, 20 - possitionsOfRecords.Count));
+        }
+    }
 }
 
 public class BlockBody
@@ -54,7 +65,7 @@ public class Block
         // update possitions of records end
         if (header.recordsInBlock == 0)
         {
-            header.possitionsOfRecords[0] = record.Length;
+            header.possitionsOfRecords[0] = record.Length - 1;
         }
         else
         {
@@ -63,23 +74,43 @@ public class Block
         return ++header.recordsInBlock;
     }
 
-    // naprawic
     // returns a record from a given position
-    public Memory<byte> GetRecord(int position)
+    public Span<byte> GetRecordSpan(int position)
     {
-        if (header.possitionsOfRecords[position] == -1) throw new IndexOutOfRangeException();
-        int start = position == 0 ? 0 : header.possitionsOfRecords[position - 1];
-        int end = header.possitionsOfRecords[position];
+        /*
+        if (position < 0 || position >= header.recordsInBlock || header.possitionsOfRecords[position] == -1)
+        {
+            Console.WriteLine($"Invalid position: {position}, recordsInBlock: {header.recordsInBlock}, positionsOfRecords: {string.Join(", ", header.possitionsOfRecords)}");
+        }
+        */
+        if (position < 0 || position >= header.recordsInBlock || header.possitionsOfRecords[position] == -1)
+            throw new IndexOutOfRangeException("Invalid record position.");
 
-        return new Memory<byte>(body.Records, start, end);
+        int start = position == 0 ? 0 : header.possitionsOfRecords[position - 1] + 1;
+        int end = header.possitionsOfRecords[position];
+        int length = end - start + 1;
+
+        return new Span<byte>(body.Records, start, length);
     }
 
-    // naprawic
+    public bool CompareRecords(Block block1, int pos1, Block block2, int pos2)
+    {
+        Span<byte> record1 = block1.GetRecordSpan(pos1);
+        Span<byte> record2 = block2.GetRecordSpan(pos2);
+
+        return record1.SequenceEqual(record2);
+    }
+
+    // do poprawienia
     public override string ToString()
     {
         var sb = new StringBuilder();
-        foreach (var v in body.Records) sb.Append(v + "\n");
-
-        return $"{header.Hash} {header.Nonce} {header.DataHash}\n{sb}";
+        //foreach (var v in body.Records) sb.Append(v + "\n");
+        sb.Append(header.Nonce + "\n");
+        sb.Append($"PreviousHash: {header.PreviousHash}\n");
+        foreach (var v in header.possitionsOfRecords) sb.Append(v + "\n");
+        //return $"{header.Hash} {header.Nonce} {header.DataHash}\n{sb}";
+        return sb.ToString();
     }
+
 }

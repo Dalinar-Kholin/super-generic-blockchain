@@ -11,6 +11,7 @@ using Xunit.Abstractions;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+
 using blockProject.blockchain.genericBlockchain;
 
 namespace TestProject.testAddingRecords;
@@ -83,9 +84,26 @@ public class testRecordPropagation
 {
     private readonly ITestOutputHelper _testOutputHelper;
 
+    private readonly IValidator validator = new Validator();
+
     public testRecordPropagation(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
+    }
+    public static StringContent RandomContent()
+    {
+        var message = "xd4" + RandomNumberGenerator.GetInt32(1000, 9999).ToString();
+
+        var requestData = new
+        {
+            to = "0x0",
+            message = message,
+            shouldBeEncrypted = false
+        };
+
+        // Serializing the object to JSON
+        var json = JsonConvert.SerializeObject(requestData);
+        return new StringContent(json, Encoding.UTF8, "application/json");
     }
 
     [Fact]
@@ -100,13 +118,13 @@ public class testRecordPropagation
             Environment.Exit(1);
         }
 
-        Blockchain.GetInstance().SetChain(storedChain);
-
         const int node1Port = 9990;
         const int node2Port = 8880;
         const string node2Ip = "127.0.0.1";
 
         var sender = new DataSender();
+        Blockchain.GetInstance().SetSender(sender);
+
         new Thread(new Listener(node1Port).Start).Start();
         new Thread(new Listener(node2Port).Start).Start();
         var node1 = TestHelper.MakeApi();
@@ -164,28 +182,206 @@ public class testRecordPropagation
             json = JsonConvert.SerializeObject(requestData);
             content = new StringContent(json, Encoding.UTF8, "application/json");
 
+            //Blockchain.GetInstance().DisplayBlockchain();
+
+            content = RandomContent();
+
             int numberOfBlocks = Blockchain.GetInstance().GetChain().Count();
             Console.WriteLine($"number of blocks before adding {numberOfBlocks}");
 
             HttpResponseMessage response2 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
             var body2 = await response2.Content.ReadAsStringAsync();
             newResult = JsonConvert.DeserializeAnonymousType(body2, newTemplate);
-            Assert.Equal(numberOfBlocks, Blockchain.GetInstance().GetChain().Count());
+            Assert.Equal(numberOfBlocks, Blockchain.GetInstance().GetBlockchain().Count());
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
 
+            content = RandomContent();
             HttpResponseMessage response3 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
             var body3 = await response2.Content.ReadAsStringAsync();
             newResult = JsonConvert.DeserializeAnonymousType(body3, newTemplate);
-            Assert.Equal(numberOfBlocks, Blockchain.GetInstance().GetChain().Count());
+            Assert.Equal(numberOfBlocks, Blockchain.GetInstance().GetBlockchain().Count());
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
 
+            content = RandomContent();
             HttpResponseMessage response4 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
             var body4 = await response2.Content.ReadAsStringAsync();
             newResult = JsonConvert.DeserializeAnonymousType(body4, newTemplate);
-            Assert.NotEqual(numberOfBlocks, Blockchain.GetInstance().GetChain().Count());
+            Assert.Equal(numberOfBlocks, Blockchain.GetInstance().GetBlockchain().Count());
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
 
+            content = RandomContent();
             HttpResponseMessage response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
             var body5 = await response2.Content.ReadAsStringAsync();
             newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
-            Assert.Equal(numberOfBlocks + 1, Blockchain.GetInstance().GetChain().Count());
+            Assert.Equal(numberOfBlocks, Blockchain.GetInstance().GetBlockchain().Count());
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            var newBlock = new Block(Blockchain.GetInstance()._blockTree._furthestNode);
+            newBlock.AddRecord(testHelper.getRandomDummyRecord().toByte());
+            newBlock.AddRecord(testHelper.getRandomDummyRecord().toByte());
+            newBlock.AddRecord(testHelper.getRandomDummyRecord().toByte());
+            newBlock.header.DataHash = validator.calcDataHash(newBlock);
+            newBlock.header.Hash = validator.calcHash(newBlock);
+            newBlock.header.miner = JsonKeyMaster.getServerPublicKey();
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+
+            Blockchain.GetInstance().AddBlockToTree(newBlock);
+            Console.WriteLine($"number of blocks after adding block: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+            content = RandomContent();
+            response5 = await client.PostAsync($"http://127.0.0.1:{node1Port + 1}/api/addRecord", content);
+            body5 = await response2.Content.ReadAsStringAsync();
+            newResult = JsonConvert.DeserializeAnonymousType(body5, newTemplate);
+            Console.WriteLine($"number of blocks after adding: {Blockchain.GetInstance().GetBlockchain().Count()}, {Blockchain.GetInstance().GetChain().Count()}");
+
+
+            //Blockchain.GetInstance().DisplayBlockchain();
+            Console.WriteLine($"{Blockchain.GetInstance()._blockTree._depth} {Blockchain.GetInstance()._blockTree._secondDepth}");
         }
 
         Blockchain.Reset();

@@ -7,6 +7,7 @@ using blockProject.nodeCommunicatio;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace blockProject;
 
@@ -19,19 +20,19 @@ internal class Program
         //ładowanie kluczy servera
         string privateKey = File.ReadAllText(args[1]);
         var ecdsaPrivate = ECDsa.Create();
-        
+
         ecdsaPrivate.ImportFromPem(privateKey);
-        
+
         var messageBytes = RandomNumberGenerator.GetBytes(64);
 
         byte[] signature = ecdsaPrivate.SignData(messageBytes, HashAlgorithmName.SHA256);
         bool isValid = ecdsaPrivate.VerifyData(messageBytes, signature, HashAlgorithmName.SHA256);
-        
+
         if (!isValid)
         {
             throw new Exception("bad keys");
         }
-        
+
         var keys = new Keys(ecdsaPrivate.ExportECPrivateKey(), ecdsaPrivate.ExportSubjectPublicKeyInfo());
 
         JsonKeyMaster.loadServerKeys(keys);
@@ -47,32 +48,39 @@ internal class Program
         }
 
         var sender = new DataSender();
+        Blockchain.GetInstance().SetSender(sender);
+
         var httpMaster = new HttpMaster(sender);
         new Thread(new Listener(port).Start).Start(); // start listener for node communication
-        
+
         new Thread(new NodeCommunicationSupervisor(sender).Start).Start(); // menage communication with node
-        
+
         var builder = WebApplication.CreateBuilder();
 
         // CORS policy
         builder.Services.AddCors(options =>
         {
-            options.AddPolicy("AllowFrontend", policy =>
+            options.AddPolicy("AllowFrontendWithCreds", policy =>
             {
                 policy
                     .WithOrigins("http://127.0.0.1:3000")
                     .AllowAnyHeader()
                     .AllowAnyMethod()
-                    .AllowCredentials();
+                    .AllowCredentials(); //cookie
             });
         });
+
 
         var app = builder.Build();
 
         // CORS
-        app.UseCors("AllowFrontend");
+        app.UseCors("AllowFrontendWithCreds");
 
-        app.UseHttpsRedirection();
+
+        if (app.Environment.IsProduction())
+        {
+            app.UseHttpsRedirection();
+        }
         app.UseDefaultFiles(); // Szuka index.html automatycznie
         app.UseStaticFiles();
         app.MapFallbackToFile("index.html");

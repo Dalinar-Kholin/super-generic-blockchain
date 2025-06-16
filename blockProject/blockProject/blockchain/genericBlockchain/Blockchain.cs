@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using blockProject.httpServer;
 using blockProject.nodeCommunicatio;
 using Newtonsoft.Json;
@@ -10,6 +11,17 @@ public class Blockchain
     private readonly IBlockchainDataHandler _blockchainDataHandler = singleFileBlockchainDataHandler.GetInstance();
     private readonly Mutex _mutex = new();
 
+    private int _minedBlocks = 0;
+
+    public int GetMinedBlockCount()
+    {
+        return _minedBlocks;
+    }
+
+    private int _receivedBlocks = 0;
+    private const double DifferenceThresholdPercent = 20.0;
+
+
     private readonly IValidator validator = new Validator();
     private List<BlockType> chain = new();
 
@@ -20,90 +32,79 @@ public class Blockchain
     private Blockchain() { }
 
     // header tree
-    private BlockNode _blockTree = new BlockNode();
+    public BlockNode _blockTree = new BlockNode();
 
     // dictionary by DataHash (because there may be several blocks with the same data)
     private Dictionary<string, List<BlockType>> _blockDict = new();
 
+    private DataSender _sender;
 
 
-    /*
-        // tworzenie bloków z odrzuconych rekordów (które są w odpowiedniej kolejce)
-        private void CreatWasteBlocks()
+
+    public async Task HandleWastedBlocks(BlockType rootBlock)
+    {
+        var rejectedRecords = ExtractRecords(); // extract records from _blockDict
+        AddBlockToTree(rootBlock);
+        Console.WriteLine(rejectedRecords.Count);
+
+        while (rejectedRecords.Count > 0)
         {
-            // działamy dopóki kolejka nie bedzie pusta a gdy jest niewystarczająca liczba rekordów do stworzenia bloku
-            // to rekordy z waste kolejki wrzucamy do zwykłej
-
-            // tworzymy bloki i odrazu dajemy je do chaina
-            List<byte[]> rejectedRecords = ExtractRecords();
-            while (rejectedRecords.Count >= 3)
+            var a = AddRecord(rejectedRecords[0]);
+            rejectedRecords.RemoveAt(0);
+            if (a != null)
             {
-                BlockType newBlock = new BlockType();
-                newBlock.header.PreviousHash = chain.Count == 0 ? "0" : chain[chain.Count - 1].header.Hash;
+                // if we created a block we send it to other nodes
+                await _sender.SendData(a);
+            }
+        }
+    }
 
-                // add records to the block
-                for (int i = 0; i < 3 && rejectedRecords.Count > 0; i++)
+    // extracting records from rejected blocks from _blockDict
+    private List<byte[]> ExtractRecords()
+    {
+        List<byte[]> rejectedRecords = new List<byte[]>();
+
+        foreach (var blockList in _blockDict.Values)
+        {
+            foreach (var block in blockList)
+            {
+                for (int i = 0; i < block.header.recordsInBlock; i++)
                 {
-                    newBlock.AddRecord(rejectedRecords[0]);
-                    rejectedRecords.RemoveAt(0);
+                    Span<byte> recordSpan = block.GetRecordSpan(i);
+                    byte[] recordArray = recordSpan.ToArray();
+                    rejectedRecords.Add(recordArray);
                 }
-
-                // calculate hashes
-                newBlock.header.DataHash = validator.calcDataHash(newBlock);
-                newBlock.header.Hash = validator.calcHash(newBlock);
-
-                chain.Add(newBlock);
             }
         }
 
+        _blockDict.Clear();
 
-            // wyodrębnienie oraz posortowanie rekordów z bloków odrzuconych czyli z _blockDict
-            private List<byte[]> ExtractRecords()
-            {
-                List<byte[]> rejectedRecords = new List<byte[]>();
+        //rejectedRecords.Sort();
+        return rejectedRecords;
+    }
 
-                // iterujemy po wszystkich blokach w _blockDict
-                foreach (var blockList in _blockDict.Values)
-                {
-                    foreach (var block in blockList)
-                    {
-                        // iterujemy po wszystkich rekordach w bloku
-                        foreach (var record in block.body.Records)
-                        {
-                            rejectedRecords.Add(record);
-                        }
-                    }
-                }
-                _blockDict.Clear();
-                rejectedRecords.Sort();
-
-                return rejectedRecords;
-            }
-            */
 
     // shortening the tree when possible (one of the branches is 5 blocks ahead of the others)
     private void DelateForks()
     {
         if (_blockTree._depth >= _blockTree._secondDepth + 5)
         {
-            List<TreeHeader> hashes = _blockTree.GetPath(_blockTree._furthestNode); // returns a list of headers from the longest path in the tree
+            List<TreeHeader> hashes = _blockTree.GetPath(_blockTree._furthestNode); // returns a list of headers from the longest path in the _blockTree
 
-            _blockTree = new BlockNode(); // resetting the block tree
+            _blockTree = new BlockNode();
+            var rootBlock = new BlockType(); // the last block that will be added to the tree
             for (int i = 0; i < hashes.Count; i++)
             {
-                // we look for a block with DataHash hashes[i].DataHash in the dictionary and take the block with the appropriate hash
                 foreach (var block in _blockDict[hashes[i].DataHash])
                 {
-                    // a block with the appropriate hash was found
                     if (block.header.Hash == hashes[i].Hash)
                     {
-                        // we remove all blocks from _blockDict with DataHash hashes[i].DataHash
                         _blockDict.Remove(hashes[i].DataHash);
 
                         // adding last block back to _blockTree
                         if (i == hashes.Count - 1)
                         {
-                            AddBlockToTree(block);
+                            rootBlock = block;
                         }
                         else
                         {
@@ -114,12 +115,7 @@ public class Blockchain
                 }
             }
 
-
-            // reszte DataHash z _blockDict trzeba dodac (jakoś uporządkowane) do kolejki (trzeba ja zaimplementowac) i stworzyć nowe bloki odrazu dodając je do chaina
-            // TODO
-
-            //CreatWasteBlocks();
-
+            HandleWastedBlocks(rootBlock); // handle all records from _blockDict that were not added to the chain
         }
     }
 
@@ -127,6 +123,9 @@ public class Blockchain
     public void AddBlockToTree(BlockType block)
     {
         _mutex.WaitOne();
+
+        newestBlock = new BlockType();
+
         // creating a tree header from block header
         TreeHeader treeHeader = new TreeHeader
         {
@@ -151,13 +150,22 @@ public class Blockchain
     // return count of records in blockchain that let us know to create block or not 
     public BlockType? AddRecord(byte[] Record)
     {
+        if (IsRecordInBlockchain(Record))
+
+        {
+
+            // if record already exists in blockchain we do not add it
+            return null;
+        }
+
         var rec = newestBlock.AddRecord(Record);
 
         if (rec >= 3)
         {
+
             var newBlock = newestBlock;
 
-            // At first, there may be no blocks in the tree
+            // at first there may be no blocks in the tree
             if (_blockTree._furthestNode == "")
             {
                 newBlock.header.PreviousHash = chain.Count == 0 ? "0" : chain[chain.Count - 1].header.Hash;
@@ -173,12 +181,14 @@ public class Blockchain
 
             newBlock.header.miner = JsonKeyMaster.getServerPublicKey();
 
+            _minedBlocks++;
+
             // todo:
             // pierwszym rekordem danyhc powinien być rekord
             // przesyłający sumę opłat za wykopanie z konta 0x0 na konto kopacza
+
             AddBlockToTree(newestBlock);
 
-            newestBlock = new BlockType();
             return newBlock;
         }
 
@@ -192,7 +202,6 @@ public class Blockchain
         block.header.Hash = validator.calcHash(block);
         block.header.DataHash = validator.calcDataHash(block);
 
-        //chain.Add(block);
         AddBlockToTree(block);
 
         _mutex.ReleaseMutex();
@@ -201,6 +210,7 @@ public class Blockchain
     public void AddBlock(BlockType block)
     {
         _mutex.WaitOne();
+
         var err = validator.validate(block);
         if (err != null) // if not valid block we reject to include
         {
@@ -209,7 +219,15 @@ public class Blockchain
             return;
         }
 
-        //chain.Add(block);
+        if (IsBlockInBlockchain(block))
+        {
+            // if block already exists in blockchain we do not add it
+            _mutex.ReleaseMutex();
+            return;
+        }
+
+        _receivedBlocks++;
+
         AddBlockToTree(block);
 
         _mutex.ReleaseMutex();
@@ -220,21 +238,21 @@ public class Blockchain
     {
         _mutex.WaitOne();
         List<TreeHeader> hashes = _blockTree.GetPath(_blockTree._furthestNode);
+
         if (hashes.Count == 1 && hashes[0].Hash == "")
         {
             // if there is no blocks in tree
             _mutex.ReleaseMutex();
             return chain;
         }
+
         List<BlockType> blocks = new List<BlockType>();
         for (int i = hashes.Count - 1; i >= 0; i--)
         {
-            // we look for a block with DataHash hashes[i].DataHash in the dictionary and take the block with the appropriate hash
             foreach (var block in _blockDict[hashes[i].DataHash])
             {
                 if (block.header.Hash == hashes[i].Hash)
                 {
-                    // a block with the appropriate hash was found
                     blocks.Add(block);
                     break;
                 }
@@ -281,6 +299,137 @@ public class Blockchain
     public static void Reset()
     {
         _instance = null;
+    }
+
+    public void SetSender(DataSender sender)
+    {
+        _sender = sender;
+    }
+
+    public void LogIfDataDifferenceExceedsThreshold()
+    {
+        _mutex.WaitOne();
+        int localBlockCount = ExtractBlocksFromTree().Count;
+        int localRecordCount = ExtractBlocksFromTree().Sum(b => b.body.Records.Count());
+        _mutex.ReleaseMutex();
+
+        if (localBlockCount == 0 || localRecordCount == 0)
+        {
+            Console.WriteLine("[INFO] Local blockchain is empty, skipping difference check.");
+            return;
+        }
+
+        double blockDiff = Math.Abs(_minedBlocks - _receivedBlocks) / (double)(Math.Max(1, _minedBlocks + _receivedBlocks)) * 100.0;
+
+        if (blockDiff >= DifferenceThresholdPercent)
+        {
+            Console.WriteLine($"[WARNING] Block mining/receiving difference exceeds" +
+                $" {DifferenceThresholdPercent}%: {blockDiff:F2}% (mined: {_minedBlocks}, received: {_receivedBlocks})");
+        }
+
+    }
+
+    public void ResetCounters()
+    {
+        _mutex.WaitOne();
+        _receivedBlocks = 0;
+        _minedBlocks = 0;
+        _mutex.ReleaseMutex();
+    }
+
+    private bool IsBlockInBlockchain(BlockType block)
+    {
+        _mutex.WaitOne();
+
+        if (_blockDict.ContainsKey(block.header.DataHash))
+        {
+            foreach (var b in _blockDict[block.header.DataHash])
+            {
+                if (b.header.Hash == block.header.Hash)
+                {
+                    _mutex.ReleaseMutex();
+                    return true;
+                }
+            }
+        }
+
+        foreach (var b in chain)
+        {
+            if (b.header.Hash == block.header.Hash)
+            {
+                _mutex.ReleaseMutex();
+                return true;
+            }
+        }
+
+        _mutex.ReleaseMutex();
+        return false;
+    }
+
+    private bool IsRecordInBlockchain(byte[] record)
+    {
+        _mutex.WaitOne();
+
+        Span<byte> recordSpan = record.AsSpan();
+
+        if (newestBlock.header.recordsInBlock > 0)
+        {
+
+            for (int i = 0; i < newestBlock.header.recordsInBlock; i++)
+            {
+
+                if (recordSpan.SequenceEqual(newestBlock.GetRecordSpan(i)))
+                {
+                    _mutex.ReleaseMutex();
+                    return true;
+                }
+
+            }
+        }
+
+        foreach (var blockList in _blockDict.Values)
+        {
+            foreach (var block in blockList)
+            {
+                int recordCount = block.header.recordsInBlock;
+                for (int i = 0; i < recordCount; i++)
+                {
+                    if (recordSpan.SequenceEqual(block.GetRecordSpan(i)))
+                    {
+                        _mutex.ReleaseMutex();
+                        return true;
+                    }
+                }
+            }
+        }
+
+        foreach (var block in chain)
+        {
+
+            for (int i = 0; i < block.header.recordsInBlock; i++)
+            {
+                if (recordSpan.SequenceEqual(block.GetRecordSpan(i)))
+                {
+                    _mutex.ReleaseMutex();
+                    return true;
+                }
+            }
+        }
+
+        _mutex.ReleaseMutex();
+        return false;
+    }
+
+    public void DisplayBlockchain()
+    {
+        _mutex.WaitOne();
+        Console.WriteLine("Blockchain:");
+        foreach (var block in chain)
+        {
+            Console.WriteLine(block.ToString());
+            Console.WriteLine("===================================");
+        }
+        _mutex.ReleaseMutex();
     }
 }
 

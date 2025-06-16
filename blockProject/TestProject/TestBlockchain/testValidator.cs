@@ -18,6 +18,7 @@ public class testValidator
         var dh = singleFileBlockchainDataHandler.GetTestInstance();
         dh._filePath = "../../../data.json";
         var (storedChain, error) = dh.readBlockchain();
+
         if (error != null)
         {
             // jeżeli nie udało się załadować blockchainu spadamy z rowerka
@@ -38,7 +39,7 @@ public class testValidator
 
     private Error? goodBlock()
     {
-        var blk = new Block(Blockchain.GetInstance().GetChain()[1].header.PreviousHash);
+        var blk = new Block(Blockchain.GetInstance().GetBlockchain()[0].header.Hash);
         for (var i = 0; i < Random.Shared.Next() % 3; i++)
             blk.AddRecord(testHelper.getRandomDummyRecord().toByte());
 

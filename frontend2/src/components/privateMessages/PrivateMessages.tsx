@@ -1,12 +1,13 @@
 'use client'
+
 import { useEffect, useState } from 'react'
 import { getPrivateMessages } from '@/utils/functions'
 import c from './PrivateMessages.module.scss'
 
 interface Message {
-	id: number
 	from: string
-	text: string
+	to: string
+	message: string
 }
 
 export default function PrivateMessages() {
@@ -16,7 +17,7 @@ export default function PrivateMessages() {
 		const fetchMessages = async () => {
 			try {
 				const data = await getPrivateMessages()
-				setMsgs(data.messages ?? [])
+				setMsgs(data.result ?? [])
 			} catch (err) {
 				console.error('❌ Failed to fetch private messages:', err)
 			}
@@ -26,13 +27,18 @@ export default function PrivateMessages() {
 	}, [])
 
 	return (
-		<ul className={c.list}>
-			{msgs.map((m) => (
-				<li key={m.id} className={c.item}>
-					<span className={c.from}>{m.from}</span>
-					<span className={c.text}>{m.text}</span>
-				</li>
-			))}
-		</ul>
+		<div className={c.wrapper}>
+			<ul className={c.list}>
+				{msgs.map((m, i) => (
+					<li key={i} className={c.item}>
+						<div className={c.meta}>
+							<span className={c.from}>{m.from}</span>
+							<span className={c.to}>→ {m.to}</span>
+						</div>
+						<div className={c.text}>{m.message}</div>
+					</li>
+				))}
+			</ul>
+		</div>
 	)
 }

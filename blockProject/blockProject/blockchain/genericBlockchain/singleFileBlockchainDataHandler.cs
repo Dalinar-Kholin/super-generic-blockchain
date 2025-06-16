@@ -83,6 +83,7 @@ public class singleFileBlockchainDataHandler : IBlockchainDataHandler
 
             var json = File.ReadAllText(_filePath);
             var chain = JsonConvert.DeserializeObject<List<BlockType>>(json) ?? new List<BlockType>();
+
             return (chain, null);
         }
         catch (Exception e)
