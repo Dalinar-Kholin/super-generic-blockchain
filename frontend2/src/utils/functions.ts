@@ -1,15 +1,13 @@
-const BASE_URL = 'http://127.0.0.1:8071'
-
 // -------------------------
 // AUTH CHECK
 // -------------------------
 export const isAuth = async (): Promise<boolean> => {
 	try {
-		const r = await fetch(BASE_URL + '/api/getMessages', {
+		const res = await fetch('/api/getMessages', {
 			credentials: 'include',
 		})
-		const d = await r.json()
-		return d.success === true
+		const json = await res.json()
+		return json.success === true
 	} catch (err) {
 		return false
 	}
@@ -27,7 +25,7 @@ export const getUsername = (): string => {
 // -------------------------
 export const getPublicMessages = async () => {
 	try {
-		const res = await fetch(`${BASE_URL}/anon/getMessages`)
+		const res = await fetch('/anon/getMessages')
 		const json = await res.json()
 		console.log('public', json)
 		return json
@@ -41,7 +39,7 @@ export const getPublicMessages = async () => {
 // AUTH ROUTES
 // -------------------------
 export const getPrivateMessages = async () => {
-	const res = await fetch(`${BASE_URL}/api/getMessages`, {
+	const res = await fetch('/api/getMessages', {
 		credentials: 'include',
 	})
 	const json = await res.json()
@@ -58,7 +56,7 @@ export const sendMessage = async ({
 	message: string
 	shouldBeEncrypted: boolean
 }) => {
-	const res = await fetch(`${BASE_URL}/api/addRecord`, {
+	const res = await fetch('/api/addRecord', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		credentials: 'include',
@@ -78,7 +76,7 @@ export const login = async ({
 	username: string
 	password: string
 }) => {
-	const res = await fetch(`${BASE_URL}/auth/login`, {
+	const res = await fetch('/auth/login', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		credentials: 'include',
@@ -101,7 +99,7 @@ export const register = async ({
 	privateKey: string
 	publicKey: string
 }) => {
-	const res = await fetch(`${BASE_URL}/auth/register`, {
+	const res = await fetch('/auth/register', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ username, password, privateKey, publicKey }),
@@ -114,12 +112,12 @@ export const register = async ({
 // SUPERVISOR ROUTES
 // -------------------------
 export const getStats = async () => {
-	const res = await fetch(`${BASE_URL}/supervisor/getStats`)
+	const res = await fetch('/supervisor/getStats')
 	return res.json()
 }
 
 export const getFriendIp = async () => {
-	const res = await fetch(`${BASE_URL}/supervisor/getFriendIp`)
+	const res = await fetch('/supervisor/getFriendIp')
 	return res.json()
 }
 
@@ -130,7 +128,7 @@ export const addNewNode = async ({
 	ip: string
 	port: number
 }) => {
-	const url = new URL(`${BASE_URL}/supervisor/addNewNode`)
+	const url = new URL('/supervisor/addNewNode', window.location.origin)
 	url.searchParams.append('ip', ip)
 	url.searchParams.append('port', port.toString())
 
