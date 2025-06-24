@@ -14,7 +14,7 @@ export default function LoginForm({ setForm }: Props) {
 	const router = useRouter()
 
 	const handleLogin = async () => {
-		const res = await fetch('http://127.0.0.1:8071/auth/login', {
+		const res = await fetch('/auth/login', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			credentials: 'include',

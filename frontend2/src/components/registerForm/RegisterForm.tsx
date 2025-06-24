@@ -14,7 +14,7 @@ export default function RegisterForm({ setForm }: Props) {
 	const [publicKey, setPublicKey] = useState('')
 
 	const handleRegister = async () => {
-		const res = await fetch('http://127.0.0.1:8071/auth/register', {
+		const res = await fetch('/auth/register', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ username, password, privateKey, publicKey }),
