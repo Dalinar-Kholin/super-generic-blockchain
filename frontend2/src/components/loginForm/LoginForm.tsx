@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import c from './LoginForm.module.scss'
+import { login } from '@/utils/functions'
 
 interface Props {
 	setForm: (form: 'login' | 'register') => void
@@ -14,17 +15,18 @@ export default function LoginForm({ setForm }: Props) {
 	const router = useRouter()
 
 	const handleLogin = async () => {
-		const res = await fetch('/auth/login', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			credentials: 'include',
-			body: JSON.stringify({ username, password }),
-		})
-		const data = await res.json()
-		if (data.success) {
-			localStorage.setItem('username', username)
-			router.push('/dashboard')
-		} else alert('Login failed')
+		try {
+			const data = await login({ username, password })
+			if (data.success) {
+				localStorage.setItem('username', username)
+				router.push('/dashboard')
+			} else {
+				alert('Login failed')
+			}
+		} catch (err) {
+			console.error('Login error:', err)
+			alert('Login error occurred')
+		}
 	}
 
 	return (

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import c from './RegisterForm.module.scss'
+import { register } from '@/utils/functions'
 
 interface Props {
 	setForm: (form: 'login' | 'register') => void
@@ -14,18 +15,22 @@ export default function RegisterForm({ setForm }: Props) {
 	const [publicKey, setPublicKey] = useState('')
 
 	const handleRegister = async () => {
-		const res = await fetch('/auth/register', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ username, password, privateKey, publicKey }),
-		})
-
-		const data = await res.json()
-		if (data.success) {
-			alert('Registered successfully!')
-			setForm('login')
-		} else {
-			alert('Registration failed: ' + data.result)
+		try {
+			const data = await register({
+				username,
+				password,
+				privateKey,
+				publicKey,
+			})
+			if (data.success) {
+				alert('Registered successfully!')
+				setForm('login')
+			} else {
+				alert('Registration failed: ' + data.result)
+			}
+		} catch (err) {
+			console.error('Register error:', err)
+			alert('An error occurred during registration')
 		}
 	}
 

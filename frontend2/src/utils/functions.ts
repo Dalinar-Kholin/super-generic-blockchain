@@ -55,7 +55,7 @@ export const sendMessage = async ({
 	to: string
 	message: string
 	shouldBeEncrypted: boolean
-}) => {
+}): Promise<{ success: boolean; result?: string }> => {
 	const res = await fetch('/api/addRecord', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -98,7 +98,7 @@ export const register = async ({
 	password: string
 	privateKey: string
 	publicKey: string
-}) => {
+}): Promise<{ success: boolean; result?: string }> => {
 	const res = await fetch('/auth/register', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },

@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import c from './SendMessageForm.module.scss'
+import { sendMessage } from '@/utils/functions'
 
 export default function SendMessageForm() {
 	const [to, setTo] = useState('0x0')
@@ -11,19 +12,13 @@ export default function SendMessageForm() {
 	const send = async () => {
 		setStatus('sending…')
 		try {
-			const r = await fetch('http://127.0.0.1:8071/api/addRecord', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include',
-				body: JSON.stringify({
-					to,
-					message: msg,
-					shouldBeEncrypted: enc,
-				}),
+			const d = await sendMessage({
+				to,
+				message: msg,
+				shouldBeEncrypted: enc,
 			})
-			const d = await r.json()
 			setStatus(d.success ? 'sent ✅' : 'error: ' + d.result)
-			setMsg('')
+			if (d.success) setMsg('')
 		} catch (e) {
 			setStatus('network error')
 		}
